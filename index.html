@@ -55,6 +55,45 @@
       min-width: 200px;
     }
 
+    /* --- Champion Spotlight --- */
+    #champion-section {
+      width: 90%;
+      max-width: 1000px;
+      margin-bottom: 20px;
+      text-align: center;
+      perspective: 1000px;
+    }
+
+    .champion-card {
+      background: linear-gradient(145deg, #1a1a1a, #000);
+      border: 2px solid #f7c873;
+      border-radius: 20px;
+      padding: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 30px;
+      box-shadow: 0 0 30px rgba(247, 200, 115, 0.3);
+      animation: fadeIn 0.8s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .champion-poster {
+      width: 150px;
+      height: 220px;
+      border-radius: 10px;
+      box-shadow: 0 0 20px #000;
+      border: 1px solid #f7c873;
+      background-size: cover;
+    }
+
+    .champion-info h3 { font-family: 'Limelight'; font-size: 32px; margin: 0; }
+    .gold-text { color: #f7c873; text-transform: uppercase; letter-spacing: 2px; font-weight: bold; }
+
     /* --- Visualization Sections --- */
     #boxoffice-viz, #trends-viz {
       width: 90%;
@@ -66,11 +105,7 @@
       padding: 30px;
     }
 
-    h2 {
-      text-align: center;
-      font-family: 'Limelight', cursive;
-      color: #f7c873;
-    }
+    h2 { text-align: center; font-family: 'Limelight', cursive; color: #f7c873; }
 
     .controls-row {
       display: flex;
@@ -92,10 +127,11 @@
       border-radius: 14px;
       background: rgba(20,20,20,0.8);
       position: relative;
+      transition: transform 0.2s;
     }
+    .film:hover { transform: scale(1.01); border-color: #f7c873; }
 
     .poster { width: 80px; height: 110px; border-radius: 8px; margin-right: 20px; background-size: cover; background-position: center; }
-    
     .film-title { font-size: 20px; font-weight: bold; }
 
     .hover-details {
@@ -104,7 +140,6 @@
     }
     .film:hover .hover-details { display: block; }
 
-    /* Lamps */
     .lamp { position: absolute; top: 40px; width: 30px; height: 30px; background: #ff9f1c; border-radius: 50%; box-shadow: 0 0 50px #ff9f1c; }
     .lamp.left { left: 40px; } .lamp.right { right: 40px; }
   </style>
@@ -126,6 +161,11 @@
       <option value="Fantasy">Fantasy</option>
     </select>
   </div>
+
+  <section id="champion-section">
+    <div class="gold-text" style="margin-bottom: 10px;">🏆 Annual Champion 🏆</div>
+    <div id="champion-container"></div>
+  </section>
 
   <section id="boxoffice-viz">
     <h2>Annual Rankings</h2>
@@ -203,8 +243,8 @@
     const slider = document.getElementById("boxoffice-slider");
     const yearDisplay = document.getElementById("boxoffice-year");
     const panel = document.getElementById("boxoffice-films");
+    const championContainer = document.getElementById("champion-container");
 
-    // Search inputs
     const sDirector = document.getElementById("search-director");
     const sGenre = document.getElementById("filter-genre");
 
@@ -220,6 +260,22 @@
       yearDisplay.textContent = year;
       panel.innerHTML = "";
 
+      // 1. Identify Year Champion (unaffected by director/genre filter for context)
+      const yearlyChampion = enrichedData.find(d => d.year == year && d.rank === 1);
+      if (yearlyChampion) {
+        championContainer.innerHTML = `
+          <div class="champion-card" key="${yearlyChampion.title}">
+            <div class="champion-poster" style="background-image:url('${yearlyChampion.poster}')"></div>
+            <div class="champion-info">
+              <h3>${yearlyChampion.title}</h3>
+              <div style="font-size: 1.2em; margin: 10px 0;">Directed by: <b>${yearlyChampion.director}</b></div>
+              <div class="gold-text" style="font-size: 1.5em;">${formatBoxOffice(yearlyChampion.boxOffice)}</div>
+            </div>
+          </div>
+        `;
+      }
+
+      // 2. Filter list based on UI inputs
       const films = enrichedData.filter(d => {
         const matchYear = d.year == year;
         const matchDir = d.director.toLowerCase().includes(directorQuery);
@@ -248,7 +304,7 @@
       }
     }
 
-    // Chart.js Setup
+    // Chart.js Setup with Drawing Animation
     function initChart() {
       const years = [...new Set(enrichedData.map(d => d.year))].sort();
       const totals = years.map(y => {
@@ -274,6 +330,10 @@
         },
         options: {
           responsive: true,
+          animation: {
+            duration: 2000,
+            easing: 'easeInOutQuart'
+          },
           plugins: { legend: { labels: { color: '#f7c873' } } },
           scales: {
             y: { ticks: { color: '#f7c873' }, grid: { color: 'rgba(255,255,255,0.1)' } },
@@ -283,10 +343,8 @@
       });
     }
 
-    // Event listeners
     [slider, sDirector, sGenre].forEach(el => el.addEventListener("input", update));
 
-    // Initial Load
     update();
     initChart();
   </script>
