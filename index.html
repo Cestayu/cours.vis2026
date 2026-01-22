@@ -51,6 +51,8 @@
       background: #111;
       color: #f7c873;
       outline: none;
+      flex: 1;
+      min-width: 200px;
     }
 
     /* --- Visualization Sections --- */
@@ -72,22 +74,13 @@
 
     .controls-row {
       display: flex;
+      flex-direction: column;
       align-items: center;
-      gap: 20px;
+      gap: 10px;
       margin-bottom: 20px;
     }
 
-    #play-btn {
-      padding: 10px 20px;
-      background: #f7c873;
-      color: #000;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      font-weight: bold;
-    }
-
-    .year-display { font-size: 44px; font-weight: bold; color: #f7c873; min-width: 120px; }
+    .year-display { font-size: 54px; font-family: 'Limelight'; color: #f7c873; }
 
     .films-panel { display: grid; grid-template-columns: 1fr; gap: 15px; }
 
@@ -101,13 +94,13 @@
       position: relative;
     }
 
-    .poster { width: 80px; height: 110px; border-radius: 8px; margin-right: 20px; background-size: cover; }
+    .poster { width: 80px; height: 110px; border-radius: 8px; margin-right: 20px; background-size: cover; background-position: center; }
     
     .film-title { font-size: 20px; font-weight: bold; }
 
     .hover-details {
       position: absolute; right: 10px; background: #000; border: 1px solid #f7c873;
-      padding: 10px; display: none; z-index: 10;
+      padding: 10px; display: none; z-index: 10; border-radius: 8px;
     }
     .film:hover .hover-details { display: block; }
 
@@ -124,8 +117,7 @@
   <h1>Cinema</h1>
 
   <div class="search-container">
-    <input type="text" id="search-title" placeholder="Search by title...">
-    <input type="text" id="search-director" placeholder="Director...">
+    <input type="text" id="search-director" placeholder="Filter by Director...">
     <select id="filter-genre">
       <option value="All">All Genres</option>
       <option value="Action">Action</option>
@@ -138,9 +130,8 @@
   <section id="boxoffice-viz">
     <h2>Annual Rankings</h2>
     <div class="controls-row">
-      <button id="play-btn">▶ Play Evolution</button>
       <div class="year-display" id="boxoffice-year">2013</div>
-      <input type="range" min="2013" max="2023" step="1" value="2013" id="boxoffice-slider" style="flex:1">
+      <input type="range" min="2013" max="2023" step="1" value="2013" id="boxoffice-slider" style="width: 100%">
     </div>
     <div class="films-panel" id="boxoffice-films"></div>
   </section>
@@ -212,10 +203,8 @@
     const slider = document.getElementById("boxoffice-slider");
     const yearDisplay = document.getElementById("boxoffice-year");
     const panel = document.getElementById("boxoffice-films");
-    const playBtn = document.getElementById("play-btn");
 
     // Search inputs
-    const sTitle = document.getElementById("search-title");
     const sDirector = document.getElementById("search-director");
     const sGenre = document.getElementById("filter-genre");
 
@@ -225,7 +214,6 @@
 
     function update() {
       const year = slider.value;
-      const titleQuery = sTitle.value.toLowerCase();
       const directorQuery = sDirector.value.toLowerCase();
       const genreQuery = sGenre.value;
 
@@ -234,10 +222,9 @@
 
       const films = enrichedData.filter(d => {
         const matchYear = d.year == year;
-        const matchTitle = d.title.toLowerCase().includes(titleQuery);
         const matchDir = d.director.toLowerCase().includes(directorQuery);
         const matchGenre = genreQuery === "All" || d.genre.includes(genreQuery);
-        return matchYear && matchTitle && matchDir && matchGenre;
+        return matchYear && matchDir && matchGenre;
       });
 
       if(films.length === 0) panel.innerHTML = "<p style='text-align:center'>No films found for these filters.</p>";
@@ -260,24 +247,6 @@
         `;
       }
     }
-
-    // Animation Logic
-    let isPlaying = false;
-    let timer;
-    playBtn.addEventListener("click", () => {
-      isPlaying = !isPlaying;
-      playBtn.textContent = isPlaying ? "⏸ Pause" : "▶ Play Evolution";
-      if(isPlaying) {
-        timer = setInterval(() => {
-          let val = parseInt(slider.value);
-          val = val >= 2023 ? 2013 : val + 1;
-          slider.value = val;
-          update();
-        }, 1200);
-      } else {
-        clearInterval(timer);
-      }
-    });
 
     // Chart.js Setup
     function initChart() {
@@ -315,9 +284,9 @@
     }
 
     // Event listeners
-    [slider, sTitle, sDirector, sGenre].forEach(el => el.addEventListener("input", update));
+    [slider, sDirector, sGenre].forEach(el => el.addEventListener("input", update));
 
-    // Start
+    // Initial Load
     update();
     initChart();
   </script>
