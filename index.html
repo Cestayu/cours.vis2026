@@ -1,870 +1,630 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cinema Box Office Explorer</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Arial', sans-serif;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-            color: #e4e4e4;
-            min-height: 100vh;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-
-        h1 {
-            text-align: center;
-            font-size: 3em;
-            margin-bottom: 10px;
-            background: linear-gradient(45deg, #f39c12, #e74c3c);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-        }
-
-        .subtitle {
-            text-align: center;
-            color: #95a5a6;
-            margin-bottom: 30px;
-            font-size: 1.2em;
-        }
-
-        .controls {
-            background: rgba(255,255,255,0.05);
-            backdrop-filter: blur(10px);
-            border-radius: 15px;
-            padding: 25px;
-            margin-bottom: 30px;
-            border: 1px solid rgba(255,255,255,0.1);
-        }
-
-        .control-group {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-bottom: 20px;
-        }
-
-        .control-item {
-            display: flex;
-            flex-direction: column;
-        }
-
-        label {
-            color: #f39c12;
-            margin-bottom: 8px;
-            font-weight: bold;
-            font-size: 0.9em;
-        }
-
-        select, input {
-            padding: 10px;
-            border-radius: 8px;
-            border: 1px solid rgba(255,255,255,0.2);
-            background: rgba(255,255,255,0.1);
-            color: #fff;
-            font-size: 1em;
-        }
-
-        select:focus, input:focus {
-            outline: none;
-            border-color: #f39c12;
-            background: rgba(255,255,255,0.15);
-        }
-
-        option {
-            background: #16213e;
-            color: #fff;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .stat-card {
-            background: linear-gradient(135deg, rgba(243,156,18,0.2), rgba(231,76,60,0.2));
-            backdrop-filter: blur(10px);
-            border-radius: 15px;
-            padding: 20px;
-            border: 1px solid rgba(255,255,255,0.1);
-            transition: transform 0.3s ease;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-5px);
-        }
-
-        .stat-label {
-            font-size: 0.9em;
-            color: #95a5a6;
-            margin-bottom: 5px;
-        }
-
-        .stat-value {
-            font-size: 2em;
-            font-weight: bold;
-            color: #f39c12;
-        }
-
-        .viz-container {
-            background: rgba(255,255,255,0.05);
-            backdrop-filter: blur(10px);
-            border-radius: 15px;
-            padding: 30px;
-            margin-bottom: 30px;
-            border: 1px solid rgba(255,255,255,0.1);
-        }
-
-        .viz-title {
-            font-size: 1.5em;
-            margin-bottom: 20px;
-            color: #f39c12;
-        }
-
-        #mainChart, #genreChart, #directorChart, #timelineChart {
-            width: 100%;
-            height: 500px;
-        }
-
-        .tooltip {
-            position: absolute;
-            background: rgba(0,0,0,0.9);
-            color: #fff;
-            padding: 12px;
-            border-radius: 8px;
-            pointer-events: none;
-            opacity: 0;
-            transition: opacity 0.3s;
-            font-size: 0.9em;
-            max-width: 300px;
-            border: 1px solid #f39c12;
-        }
-
-        .tooltip.active {
-            opacity: 1;
-        }
-
-        .movie-card {
-            background: rgba(255,255,255,0.05);
-            border-radius: 10px;
-            padding: 15px;
-            margin-bottom: 10px;
-            border-left: 4px solid #f39c12;
-            transition: all 0.3s ease;
-        }
-
-        .movie-card:hover {
-            background: rgba(255,255,255,0.1);
-            transform: translateX(5px);
-        }
-
-        .movie-title {
-            font-size: 1.2em;
-            color: #f39c12;
-            margin-bottom: 5px;
-        }
-
-        .movie-info {
-            color: #95a5a6;
-            font-size: 0.9em;
-        }
-
-        .legend {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
-            margin-top: 20px;
-            justify-content: center;
-        }
-
-        .legend-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 0.9em;
-        }
-
-        .legend-color {
-            width: 20px;
-            height: 20px;
-            border-radius: 4px;
-        }
-
-        .axis text {
-            fill: #95a5a6;
-            font-size: 12px;
-        }
-
-        .axis line, .axis path {
-            stroke: rgba(255,255,255,0.2);
-        }
-
-        .grid line {
-            stroke: rgba(255,255,255,0.1);
-        }
-
-        button {
-            background: linear-gradient(135deg, #f39c12, #e74c3c);
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 1em;
-            transition: all 0.3s ease;
-        }
-
-        button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(243,156,18,0.4);
-        }
-
-        .tab-container {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-        }
-
-        .tab {
-            padding: 10px 20px;
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .tab.active {
-            background: linear-gradient(135deg, #f39c12, #e74c3c);
-            border-color: #f39c12;
-        }
-
-        .tab:hover {
-            background: rgba(255,255,255,0.1);
-        }
-    </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Cinema Box Office — Fixed</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family: 'Georgia', serif; background:#0a0a0a; color:#f5f5f5; min-height:100vh; padding:20px; }
+    .container { max-width:1400px; margin:0 auto; }
+    h1 { text-align:center; font-size:3.2em; margin-bottom:8px; color:#d4af37; text-shadow:3px 3px 6px rgba(212,175,55,0.3); }
+    .subtitle { text-align:center; color:#8b7355; margin-bottom:28px; font-size:1.1em; font-style:italic; }
+    .controls { background:linear-gradient(135deg,#1a1a1a 0%,#2d2d2d 100%); border-radius:10px; padding:20px; margin-bottom:20px; border:2px solid #d4af37; box-shadow:0 4px 20px rgba(212,175,55,0.2); }
+    .control-group { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:16px; margin-bottom:12px; }
+    label { color:#d4af37; margin-bottom:8px; font-weight:bold; font-size:0.85em; text-transform:uppercase; letter-spacing:1px; }
+    select,input { padding:10px; border-radius:6px; border:2px solid #8b7355; background:#1a1a1a; color:#f5f5f5; font-size:0.95em; }
+    .stats-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:16px; margin:18px 0; }
+    .stat-card { background:linear-gradient(135deg,#2d2d2d 0%,#1a1a1a 100%); border-radius:10px; padding:16px; border:2px solid #d4af37; box-shadow:0 4px 15px rgba(212,175,55,0.15); }
+    .stat-label { font-size:0.85em; color:#8b7355; margin-bottom:8px; text-transform:uppercase; letter-spacing:1px; }
+    .stat-value { font-size:1.7em; font-weight:bold; color:#d4af37; }
+    .viz-container { background:linear-gradient(135deg,#1a1a1a 0%,#2d2d2d 100%); border-radius:10px; padding:20px; margin-bottom:20px; border:2px solid #d4af37; box-shadow:0 4px 20px rgba(212,175,55,0.2); }
+    .viz-title { font-size:1.4em; margin-bottom:14px; color:#d4af37; text-align:center; text-transform:uppercase; letter-spacing:2px; }
+    .tooltip { position:absolute; background:rgba(0,0,0,0.95); color:#f5f5f5; padding:12px; border-radius:8px; pointer-events:none; opacity:0; transition:opacity 0.15s; font-size:0.9em; max-width:320px; border:2px solid #d4af37; box-shadow:0 6px 24px rgba(0,0,0,0.8); z-index:1000; }
+    .tooltip.active { opacity:1; }
+    .tooltip-title { font-size:1.05em; color:#d4af37; margin-bottom:6px; font-weight:bold; }
+    .movie-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:18px; }
+    .movie-card { background:#2d2d2d; border-radius:10px; overflow:hidden; transition:all 0.22s; border:2px solid transparent; cursor:pointer; }
+    .movie-card:hover { transform:translateY(-8px); border-color:#d4af37; box-shadow:0 10px 30px rgba(212,175,55,0.25); }
+    .movie-poster { width:100%; height:300px; object-fit:cover; display:block; }
+    .movie-info { padding:12px; }
+    .movie-title { font-size:1.05em; color:#d4af37; margin-bottom:6px; font-weight:bold; }
+    .movie-details { color:#8b7355; font-size:0.9em; line-height:1.5; }
+    .tab-container { display:flex; gap:10px; margin-bottom:14px; flex-wrap:wrap; justify-content:center; }
+    .tab { padding:10px 16px; background:#2d2d2d; border:2px solid #8b7355; border-radius:6px; cursor:pointer; color:#8b7355; font-weight:bold; text-transform:uppercase; letter-spacing:1px; }
+    .tab.active { background:linear-gradient(135deg,#d4af37 0%,#b8941f 100%); border-color:#d4af37; color:#0a0a0a; }
+    .axis text { fill:#8b7355; font-size:12px; }
+    .axis line,.axis path { stroke:#8b7355; }
+    .grid line { stroke: rgba(139,115,85,0.12); }
+    button { background:linear-gradient(135deg,#d4af37 0%,#b8941f 100%); color:#0a0a0a; border:none; padding:10px 16px; border-radius:6px; cursor:pointer; font-size:0.95em; font-weight:bold; text-transform:uppercase; }
+    button:hover { transform:translateY(-1px); box-shadow:0 6px 18px rgba(212,175,55,0.3); }
+    /* small screens */
+    @media (max-width:560px){ .movie-poster{height:220px} }
+</style>
 </head>
 <body>
-    <div class="container">
-        <h1>🎬 Cinema Box Office</h1>
-        <p class="subtitle">Explore movie data through genres, directors, and actors</p>
+<div class="container">
+    <h1>🎬 CINEMA</h1>
+    <p class="subtitle">Box Office Explorer — fixed & completed</p>
 
-        <div class="controls">
-            <div class="control-group">
-                <div class="control-item">
-                    <label for="yearFilter">Year</label>
-                    <select id="yearFilter">
-                        <option value="all">All Years</option>
-                    </select>
-                </div>
-                <div class="control-item">
-                    <label for="genreFilter">Genre</label>
-                    <select id="genreFilter">
-                        <option value="all">All Genres</option>
-                    </select>
-                </div>
-                <div class="control-item">
-                    <label for="directorFilter">Director</label>
-                    <select id="directorFilter">
-                        <option value="all">All Directors</option>
-                    </select>
-                </div>
-                <div class="control-item">
-                    <label for="actorFilter">Lead Actor</label>
-                    <select id="actorFilter">
-                        <option value="all">All Actors</option>
-                    </select>
-                </div>
+    <div class="controls">
+        <div class="control-group">
+            <div>
+                <label for="yearFilter">Year</label>
+                <select id="yearFilter"><option value="all">All Years</option></select>
             </div>
-            <button onclick="resetFilters()">Reset All Filters</button>
-        </div>
-
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-label">Total Movies</div>
-                <div class="stat-value" id="totalMovies">0</div>
+            <div>
+                <label for="genreFilter">Genre</label>
+                <select id="genreFilter"><option value="all">All Genres</option></select>
             </div>
-            <div class="stat-card">
-                <div class="stat-label">Total Box Office</div>
-                <div class="stat-value" id="totalBoxOffice">$0</div>
+            <div>
+                <label for="directorFilter">Director</label>
+                <select id="directorFilter"><option value="all">All Directors</option></select>
             </div>
-            <div class="stat-card">
-                <div class="stat-label">Average Revenue</div>
-                <div class="stat-value" id="avgRevenue">$0</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">Top Genre</div>
-                <div class="stat-value" id="topGenre">-</div>
+            <div>
+                <label for="actorFilter">Lead Actor</label>
+                <select id="actorFilter"><option value="all">All Actors</option></select>
             </div>
         </div>
-
-        <div class="tab-container">
-            <div class="tab active" onclick="switchTab('overview')">Overview</div>
-            <div class="tab" onclick="switchTab('genre')">By Genre</div>
-            <div class="tab" onclick="switchTab('director')">By Director</div>
-            <div class="tab" onclick="switchTab('timeline')">Timeline</div>
-        </div>
-
-        <div class="viz-container" id="overviewViz">
-            <h2 class="viz-title">Box Office Performance</h2>
-            <div id="mainChart"></div>
-        </div>
-
-        <div class="viz-container" id="genreViz" style="display: none;">
-            <h2 class="viz-title">Genre Analysis</h2>
-            <div id="genreChart"></div>
-        </div>
-
-        <div class="viz-container" id="directorViz" style="display: none;">
-            <h2 class="viz-title">Top Directors by Revenue</h2>
-            <div id="directorChart"></div>
-        </div>
-
-        <div class="viz-container" id="timelineViz" style="display: none;">
-            <h2 class="viz-title">Box Office Timeline</h2>
-            <div id="timelineChart"></div>
+        <div style="display:flex; gap:12px; justify-content:flex-end;">
+            <button onclick="resetFilters()">Reset Filters</button>
         </div>
     </div>
 
-    <div class="tooltip"></div>
-
-    <script>
-        // Sample movie data - replace with your actual data
-        const movieData = [
-            {title: "The Avengers", year: 2012, boxOffice: 1518.8, genre: "Action", director: "Joss Whedon", actor: "Robert Downey Jr."},
-            {title: "The Dark Knight Rises", year: 2012, boxOffice: 1084.9, genre: "Action", director: "Christopher Nolan", actor: "Christian Bale"},
-            {title: "Skyfall", year: 2012, boxOffice: 1108.6, genre: "Action", director: "Sam Mendes", actor: "Daniel Craig"},
-            {title: "The Hobbit", year: 2012, boxOffice: 1017.0, genre: "Fantasy", director: "Peter Jackson", actor: "Martin Freeman"},
-            {title: "Frozen", year: 2013, boxOffice: 1280.8, genre: "Animation", director: "Chris Buck", actor: "Kristen Bell"},
-            {title: "Iron Man 3", year: 2013, boxOffice: 1214.7, genre: "Action", director: "Shane Black", actor: "Robert Downey Jr."},
-            {title: "Despicable Me 2", year: 2013, boxOffice: 970.8, genre: "Animation", director: "Pierre Coffin", actor: "Steve Carell"},
-            {title: "Man of Steel", year: 2013, boxOffice: 668.0, genre: "Action", director: "Zack Snyder", actor: "Henry Cavill"},
-            {title: "Gravity", year: 2013, boxOffice: 723.2, genre: "Sci-Fi", director: "Alfonso Cuarón", actor: "Sandra Bullock"},
-            {title: "Guardians of the Galaxy", year: 2014, boxOffice: 773.3, genre: "Action", director: "James Gunn", actor: "Chris Pratt"},
-            {title: "Maleficent", year: 2014, boxOffice: 758.5, genre: "Fantasy", director: "Robert Stromberg", actor: "Angelina Jolie"},
-            {title: "Transformers 4", year: 2014, boxOffice: 1104.1, genre: "Action", director: "Michael Bay", actor: "Mark Wahlberg"},
-            {title: "The Hobbit: Battle", year: 2014, boxOffice: 956.0, genre: "Fantasy", director: "Peter Jackson", actor: "Martin Freeman"},
-            {title: "Interstellar", year: 2014, boxOffice: 677.5, genre: "Sci-Fi", director: "Christopher Nolan", actor: "Matthew McConaughey"},
-            {title: "Jurassic World", year: 2015, boxOffice: 1671.7, genre: "Action", director: "Colin Trevorrow", actor: "Chris Pratt"},
-            {title: "Furious 7", year: 2015, boxOffice: 1516.0, genre: "Action", director: "James Wan", actor: "Vin Diesel"},
-            {title: "Avengers: Age of Ultron", year: 2015, boxOffice: 1405.4, genre: "Action", director: "Joss Whedon", actor: "Robert Downey Jr."},
-            {title: "Minions", year: 2015, boxOffice: 1159.4, genre: "Animation", director: "Kyle Balda", actor: "Sandra Bullock"},
-            {title: "The Martian", year: 2015, boxOffice: 630.2, genre: "Sci-Fi", director: "Ridley Scott", actor: "Matt Damon"},
-            {title: "Captain America: Civil War", year: 2016, boxOffice: 1153.3, genre: "Action", director: "Russo Brothers", actor: "Chris Evans"},
-            {title: "Rogue One", year: 2016, boxOffice: 1056.1, genre: "Sci-Fi", director: "Gareth Edwards", actor: "Felicity Jones"},
-            {title: "Finding Dory", year: 2016, boxOffice: 1028.6, genre: "Animation", director: "Andrew Stanton", actor: "Ellen DeGeneres"},
-            {title: "Zootopia", year: 2016, boxOffice: 1023.8, genre: "Animation", director: "Byron Howard", actor: "Ginnifer Goodwin"},
-            {title: "Doctor Strange", year: 2016, boxOffice: 677.7, genre: "Action", director: "Scott Derrickson", actor: "Benedict Cumberbatch"}
-        ];
-
-        let filteredData = [...movieData];
-        let currentTab = 'overview';
-
-        // Color scheme for genres
-        const genreColors = {
-            'Action': '#e74c3c',
-            'Animation': '#3498db',
-            'Fantasy': '#9b59b6',
-            'Sci-Fi': '#1abc9c',
-            'Drama': '#f39c12'
-        };
-
-        // Initialize
-        function init() {
-            populateFilters();
-            updateStats();
-            drawMainChart();
-            drawGenreChart();
-            drawDirectorChart();
-            drawTimelineChart();
-        }
-
-        function populateFilters() {
-            const years = [...new Set(movieData.map(d => d.year))].sort();
-            const genres = [...new Set(movieData.map(d => d.genre))].sort();
-            const directors = [...new Set(movieData.map(d => d.director))].sort();
-            const actors = [...new Set(movieData.map(d => d.actor))].sort();
-
-            const yearSelect = document.getElementById('yearFilter');
-            years.forEach(year => {
-                const option = document.createElement('option');
-                option.value = year;
-                option.textContent = year;
-                yearSelect.appendChild(option);
-            });
-
-            const genreSelect = document.getElementById('genreFilter');
-            genres.forEach(genre => {
-                const option = document.createElement('option');
-                option.value = genre;
-                option.textContent = genre;
-                genreSelect.appendChild(option);
-            });
-
-            const directorSelect = document.getElementById('directorFilter');
-            directors.forEach(director => {
-                const option = document.createElement('option');
-                option.value = director;
-                option.textContent = director;
-                directorSelect.appendChild(option);
-            });
-
-            const actorSelect = document.getElementById('actorFilter');
-            actors.forEach(actor => {
-                const option = document.createElement('option');
-                option.value = actor;
-                option.textContent = actor;
-                actorSelect.appendChild(option);
-            });
-
-            // Add event listeners
-            document.getElementById('yearFilter').addEventListener('change', applyFilters);
-            document.getElementById('genreFilter').addEventListener('change', applyFilters);
-            document.getElementById('directorFilter').addEventListener('change', applyFilters);
-            document.getElementById('actorFilter').addEventListener('change', applyFilters);
-        }
-
-        function applyFilters() {
-            const year = document.getElementById('yearFilter').value;
-            const genre = document.getElementById('genreFilter').value;
-            const director = document.getElementById('directorFilter').value;
-            const actor = document.getElementById('actorFilter').value;
-
-            filteredData = movieData.filter(d => {
-                return (year === 'all' || d.year == year) &&
-                       (genre === 'all' || d.genre === genre) &&
-                       (director === 'all' || d.director === director) &&
-                       (actor === 'all' || d.actor === actor);
-            });
-
-            updateStats();
-            drawMainChart();
-            drawGenreChart();
-            drawDirectorChart();
-            drawTimelineChart();
-        }
-
-        function resetFilters() {
-            document.getElementById('yearFilter').value = 'all';
-            document.getElementById('genreFilter').value = 'all';
-            document.getElementById('directorFilter').value = 'all';
-            document.getElementById('actorFilter').value = 'all';
-            applyFilters();
-        }
-
-        function updateStats() {
-            const total = filteredData.length;
-            const totalRevenue = d3.sum(filteredData, d => d.boxOffice);
-            const avgRevenue = totalRevenue / total;
-            
-            const genreCounts = d3.rollup(filteredData, v => v.length, d => d.genre);
-            const topGenre = Array.from(genreCounts.entries()).sort((a, b) => b[1] - a[1])[0]?.[0] || '-';
-
-            document.getElementById('totalMovies').textContent = total;
-            document.getElementById('totalBoxOffice').textContent = '$' + totalRevenue.toFixed(1) + 'B';
-            document.getElementById('avgRevenue').textContent = '$' + avgRevenue.toFixed(1) + 'M';
-            document.getElementById('topGenre').textContent = topGenre;
-        }
-
-        function drawMainChart() {
-            d3.select('#mainChart').selectAll('*').remove();
-
-            const margin = {top: 40, right: 100, bottom: 60, left: 60};
-            const width = document.getElementById('mainChart').clientWidth - margin.left - margin.right;
-            const height = 500 - margin.top - margin.bottom;
-
-            const svg = d3.select('#mainChart')
-                .append('svg')
-                .attr('width', width + margin.left + margin.right)
-                .attr('height', height + margin.top + margin.bottom)
-                .append('g')
-                .attr('transform', `translate(${margin.left},${margin.top})`);
-
-            const x = d3.scaleLinear()
-                .domain([d3.min(filteredData, d => d.year) - 0.5, d3.max(filteredData, d => d.year) + 0.5])
-                .range([0, width]);
-
-            const y = d3.scaleLinear()
-                .domain([0, d3.max(filteredData, d => d.boxOffice) * 1.1])
-                .range([height, 0]);
-
-            // Grid
-            svg.append('g')
-                .attr('class', 'grid')
-                .call(d3.axisLeft(y).tickSize(-width).tickFormat(''));
-
-            // Axes
-            svg.append('g')
-                .attr('class', 'axis')
-                .attr('transform', `translate(0,${height})`)
-                .call(d3.axisBottom(x).tickFormat(d3.format('d')));
-
-            svg.append('g')
-                .attr('class', 'axis')
-                .call(d3.axisLeft(y).tickFormat(d => '$' + d + 'M'));
-
-            // Circles
-            const tooltip = d3.select('.tooltip');
-
-            svg.selectAll('circle')
-                .data(filteredData)
-                .join('circle')
-                .attr('cx', d => x(d.year))
-                .attr('cy', d => y(d.boxOffice))
-                .attr('r', 0)
-                .attr('fill', d => genreColors[d.genre] || '#95a5a6')
-                .attr('opacity', 0.7)
-                .on('mouseover', function(event, d) {
-                    d3.select(this).attr('r', 12).attr('opacity', 1);
-                    tooltip.classed('active', true)
-                        .html(`
-                            <strong>${d.title}</strong><br>
-                            Year: ${d.year}<br>
-                            Box Office: $${d.boxOffice}M<br>
-                            Genre: ${d.genre}<br>
-                            Director: ${d.director}<br>
-                            Lead Actor: ${d.actor}
-                        `)
-                        .style('left', (event.pageX + 10) + 'px')
-                        .style('top', (event.pageY - 10) + 'px');
-                })
-                .on('mouseout', function() {
-                    d3.select(this).attr('r', 8).attr('opacity', 0.7);
-                    tooltip.classed('active', false);
-                })
-                .transition()
-                .duration(800)
-                .attr('r', 8);
-
-            // Legend
-            const legend = svg.append('g')
-                .attr('transform', `translate(${width - 80}, 20)`);
-
-            Object.entries(genreColors).forEach(([genre, color], i) => {
-                const g = legend.append('g')
-                    .attr('transform', `translate(0, ${i * 25})`);
-
-                g.append('rect')
-                    .attr('width', 18)
-                    .attr('height', 18)
-                    .attr('fill', color);
-
-                g.append('text')
-                    .attr('x', 24)
-                    .attr('y', 14)
-                    .text(genre)
-                    .style('fill', '#95a5a6')
-                    .style('font-size', '12px');
-            });
-        }
-
-        function drawGenreChart() {
-            d3.select('#genreChart').selectAll('*').remove();
-
-            const genreData = Array.from(d3.rollup(filteredData, 
-                v => ({count: v.length, revenue: d3.sum(v, d => d.boxOffice)}), 
-                d => d.genre
-            )).map(([genre, data]) => ({genre, ...data}));
-
-            const margin = {top: 20, right: 30, bottom: 100, left: 80};
-            const width = document.getElementById('genreChart').clientWidth - margin.left - margin.right;
-            const height = 500 - margin.top - margin.bottom;
-
-            const svg = d3.select('#genreChart')
-                .append('svg')
-                .attr('width', width + margin.left + margin.right)
-                .attr('height', height + margin.top + margin.bottom)
-                .append('g')
-                .attr('transform', `translate(${margin.left},${margin.top})`);
-
-            const x = d3.scaleBand()
-                .domain(genreData.map(d => d.genre))
-                .range([0, width])
-                .padding(0.3);
-
-            const y = d3.scaleLinear()
-                .domain([0, d3.max(genreData, d => d.revenue) * 1.1])
-                .range([height, 0]);
-
-            svg.append('g')
-                .attr('transform', `translate(0,${height})`)
-                .attr('class', 'axis')
-                .call(d3.axisBottom(x))
-                .selectAll('text')
-                .attr('transform', 'rotate(-45)')
-                .style('text-anchor', 'end');
-
-            svg.append('g')
-                .attr('class', 'axis')
-                .call(d3.axisLeft(y).tickFormat(d => '$' + d + 'M'));
-
-            const tooltip = d3.select('.tooltip');
-
-            svg.selectAll('rect')
-                .data(genreData)
-                .join('rect')
-                .attr('x', d => x(d.genre))
-                .attr('width', x.bandwidth())
-                .attr('y', height)
-                .attr('height', 0)
-                .attr('fill', d => genreColors[d.genre] || '#95a5a6')
-                .on('mouseover', function(event, d) {
-                    d3.select(this).attr('opacity', 1);
-                    tooltip.classed('active', true)
-                        .html(`
-                            <strong>${d.genre}</strong><br>
-                            Movies: ${d.count}<br>
-                            Total Revenue: $${d.revenue.toFixed(1)}M<br>
-                            Avg Revenue: $${(d.revenue/d.count).toFixed(1)}M
-                        `)
-                        .style('left', (event.pageX + 10) + 'px')
-                        .style('top', (event.pageY - 10) + 'px');
-                })
-                .on('mouseout', function() {
-                    d3.select(this).attr('opacity', 0.8);
-                    tooltip.classed('active', false);
-                })
-                .transition()
-                .duration(800)
-                .attr('y', d => y(d.revenue))
-                .attr('height', d => height - y(d.revenue))
-                .attr('opacity', 0.8);
-        }
-
-        function drawDirectorChart() {
-            d3.select('#directorChart').selectAll('*').remove();
-
-            const directorData = Array.from(d3.rollup(filteredData, 
-                v => ({count: v.length, revenue: d3.sum(v, d => d.boxOffice)}), 
-                d => d.director
-            )).map(([director, data]) => ({director, ...data}))
-              .sort((a, b) => b.revenue - a.revenue)
-              .slice(0, 10);
-
-            const margin = {top: 20, right: 30, bottom: 60, left: 200};
-            const width = document.getElementById('directorChart').clientWidth - margin.left - margin.right;
-            const height = 500 - margin.top - margin.bottom;
-
-            const svg = d3.select('#directorChart')
-                .append('svg')
-                .attr('width', width + margin.left + margin.right)
-                .attr('height', height + margin.top + margin.bottom)
-                .append('g')
-                .attr('transform', `translate(${margin.left},${margin.top})`);
-
-            const x = d3.scaleLinear()
-                .domain([0, d3.max(directorData, d => d.revenue) * 1.1])
-                .range([0, width]);
-
-            const y = d3.scaleBand()
-                .domain(directorData.map(d => d.director))
-                .range([0, height])
-                .padding(0.2);
-
-            svg.append('g')
-                .attr('class', 'axis')
-                .call(d3.axisLeft(y));
-
-            svg.append('g')
-                .attr('class', 'axis')
-                .attr('transform', `translate(0,${height})`)
-                .call(d3.axisBottom(x).tickFormat(d => '$' + d + 'M'));
-
-            const tooltip = d3.select('.tooltip');
-
-            svg.selectAll('rect')
-                .data(directorData)
-                .join('rect')
-                .attr('y', d => y(d.director))
-                .attr('height', y.bandwidth())
-                .attr('x', 0)
-                .attr('width', 0)
-                .attr('fill', '#f39c12')
-                .on('mouseover', function(event, d) {
-                    d3.select(this).attr('fill', '#e74c3c');
-                    tooltip.classed('active', true)
-                        .html(`
-                            <strong>${d.director}</strong><br>
-                            Movies: ${d.count}<br>
-                            Total Revenue: $${d.revenue.toFixed(1)}M<br>
-                            Avg per Movie: $${(d.revenue/d.count).toFixed(1)}M
-                        `)
-                        .style('left', (event.pageX + 10) + 'px')
-                        .style('top', (event.pageY - 10) + 'px');
-                })
-                .on('mouseout', function() {
-                    d3.select(this).attr('fill', '#f39c12');
-                    tooltip.classed('active', false);
-                })
-                .transition()
-                .duration(800)
-                .attr('width', d => x(d.revenue));
-        }
-
-        function drawTimelineChart() {
-            d3.select('#timelineChart').selectAll('*').remove();
-
-            const yearData = Array.from(d3.rollup(filteredData, 
-                v => ({count: v.length, revenue: d3.sum(v, d => d.boxOffice)}), 
-                d => d.year
-            )).map(([year, data]) => ({year, ...data}))
-              .sort((a, b) => a.year - b.year);
-
-            const margin = {top: 20, right: 30, bottom: 60, left: 80};
-            const width = document.getElementById('timelineChart').clientWidth - margin.left - margin.right;
-            const height = 500 - margin.top - margin.bottom;
-
-            const svg = d3.select('#timelineChart')
-                .append('svg')
-                .attr('width', width + margin.left + margin.right)
-                .attr('height', height + margin.top + margin.bottom)
-                .append('g')
-                .attr('transform', `translate(${margin.left},${margin.top})`);
-
-            const x = d3.scaleLinear()
-                .domain(d3.extent(yearData, d => d.year))
-                .range([0, width]);
-
-            const y = d3.scaleLinear()
-                .domain([0, d3.max(yearData, d => d.revenue) * 1.1])
-                .range([height, 0]);
-
-            // Grid
-            svg.append('g')
-                .attr('class', 'grid')
-                .call(d3.axisLeft(y).tickSize(-width).tickFormat(''));
-
-            // Axes
-            svg.append('g')
-                .attr('class', 'axis')
-                .attr('transform', `translate(0,${height})`)
-                .call(d3.axisBottom(x).tickFormat(d3.format('d')));
-
-            svg.append('g')
-                .attr('class', 'axis')
-                .call(d3.axisLeft(y).tickFormat(d => '
-             + d + 'M'));
-
-            // Line
-            const line = d3.line()
-                .x(d => x(d.year))
-                .y(d => y(d.revenue))
-                .curve(d3.curveMonotoneX);
-
-            svg.append('path')
-                .datum(yearData)
-                .attr('fill', 'none')
-                .attr('stroke', '#f39c12')
-                .attr('stroke-width', 3)
-                .attr('d', line);
-
-            // Area
-            const area = d3.area()
-                .x(d => x(d.year))
-                .y0(height)
-                .y1(d => y(d.revenue))
-                .curve(d3.curveMonotoneX);
-
-            svg.append('path')
-                .datum(yearData)
-                .attr('fill', 'url(#gradient)')
-                .attr('d', area);
-
-            // Gradient
-            const gradient = svg.append('defs')
-                .append('linearGradient')
-                .attr('id', 'gradient')
-                .attr('x1', '0%')
-                .attr('y1', '0%')
-                .attr('x2', '0%')
-                .attr('y2', '100%');
-
-            gradient.append('stop')
-                .attr('offset', '0%')
-                .attr('stop-color', '#f39c12')
-                .attr('stop-opacity', 0.5);
-
-            gradient.append('stop')
-                .attr('offset', '100%')
-                .attr('stop-color', '#f39c12')
-                .attr('stop-opacity', 0);
-
-            // Points
-            const tooltip = d3.select('.tooltip');
-
-            svg.selectAll('circle')
-                .data(yearData)
-                .join('circle')
-                .attr('cx', d => x(d.year))
-                .attr('cy', d => y(d.revenue))
-                .attr('r', 6)
-                .attr('fill', '#f39c12')
-                .attr('stroke', '#1a1a2e')
-                .attr('stroke-width', 2)
-                .on('mouseover', function(event, d) {
-                    d3.select(this).attr('r', 10);
-                    tooltip.classed('active', true)
-                        .html(`
-                            <strong>${d.year}</strong><br>
-                            Movies Released: ${d.count}<br>
-                            Total Revenue: ${d.revenue.toFixed(1)}M
-                        `)
-                        .style('left', (event.pageX + 10) + 'px')
-                        .style('top', (event.pageY - 10) + 'px');
-                })
-                .on('mouseout', function() {
-                    d3.select(this).attr('r', 6);
-                    tooltip.classed('active', false);
-                });
-        }
-
-        function switchTab(tab) {
-            currentTab = tab;
-            
-            // Update tab styles
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            event.target.classList.add('active');
-
-            // Hide all viz containers
-            document.getElementById('overviewViz').style.display = 'none';
-            document.getElementById('genreViz').style.display = 'none';
-            document.getElementById('directorViz').style.display = 'none';
-            document.getElementById('timelineViz').style.display = 'none';
-
-            // Show selected viz
-            switch(tab) {
-                case 'overview':
-                    document.getElementById('overviewViz').style.display = 'block';
-                    break;
-                case 'genre':
-                    document.getElementById('genreViz').style.display = 'block';
-                    break;
-                case 'director':
-                    document.getElementById('directorViz').style.display = 'block';
-                    break;
-                case 'timeline':
-                    document.getElementById('timelineViz').style.display = 'block';
-                    break;
-            }
-        }
-
-        // Initialize on load
-        init();
+    <div class="stats-grid">
+        <div class="stat-card"><div class="stat-label">Total Movies</div><div class="stat-value" id="totalMovies">0</div></div>
+        <div class="stat-card"><div class="stat-label">Total Box Office</div><div class="stat-value" id="totalBoxOffice">$0B</div></div>
+        <div class="stat-card"><div class="stat-label">Average Revenue</div><div class="stat-value" id="avgRevenue">$0M</div></div>
+        <div class="stat-card"><div class="stat-label">Top Genre</div><div class="stat-value" id="topGenre">-</div></div>
+    </div>
+
+    <div class="tab-container">
+        <div class="tab active" onclick="switchTab(event,'overview')">Overview</div>
+        <div class="tab" onclick="switchTab(event,'genre')">Genre Analysis</div>
+        <div class="tab" onclick="switchTab(event,'director')">Directors</div>
+        <div class="tab" onclick="switchTab(event,'timeline')">Timeline</div>
+        <div class="tab" onclick="switchTab(event,'gallery')">Movie Gallery</div>
+    </div>
+
+    <div class="viz-container" id="overviewViz">
+        <h2 class="viz-title">Box Office Scatter (by year)</h2>
+        <div id="mainChart" style="width:100%; min-height:480px;"></div>
+    </div>
+
+    <div class="viz-container" id="genreViz" style="display:none;">
+        <h2 class="viz-title">Genre Revenue</h2>
+        <div id="genreChart" style="width:100%; min-height:480px;"></div>
+    </div>
+
+    <div class="viz-container" id="directorViz" style="display:none;">
+        <h2 class="viz-title">Top Directors (by total revenue)</h2>
+        <div id="directorChart" style="width:100%; min-height:480px;"></div>
+    </div>
+
+    <div class="viz-container" id="timelineViz" style="display:none;">
+        <h2 class="viz-title">Box Office Timeline (total per year)</h2>
+        <div id="timelineChart" style="width:100%; min-height:480px;"></div>
+    </div>
+
+    <div class="viz-container" id="galleryViz" style="display:none;">
+        <h2 class="viz-title">Movie Gallery</h2>
+        <div id="movieGrid" class="movie-grid"></div>
+    </div>
+</div>
+
+<div class="tooltip" id="tooltip"></div>
+
+<script>
+/*
+  DATA: converted box office to millions (float)
+  Source: data you pasted (numbers are original world box office in USD; converted to M)
+*/
+const movieData = [
+  {year:2013,title:"Frozen",boxOffice:1280.802282,genre:"Animation",director:"Chris Buck, Jennifer Lee",actor:"Kristen Bell"},
+  {year:2013,title:"Iron Man 3",boxOffice:1214.811252,genre:"Action / Super-héros",director:"Shane Black",actor:"Robert Downey Jr."},
+  {year:2013,title:"Despicable Me 2",boxOffice:970.766005,genre:"Animation",director:"Pierre Coffin, Chris Renaud",actor:"Steve Carell"},
+  {year:2013,title:"The Hobbit: The Desolation of Smaug",boxOffice:958.366855,genre:"Fantasy",director:"Peter Jackson",actor:"Martin Freeman"},
+  {year:2013,title:"The Hunger Games: Catching Fire",boxOffice:865.011746,genre:"Science-fiction",director:"Francis Lawrence",actor:"Jennifer Lawrence"},
+
+  {year:2014,title:"Transformers: Age of Extinction",boxOffice:1104.054072,genre:"Action / Science-fiction",director:"Michael Bay",actor:"Mark Wahlberg"},
+  {year:2014,title:"The Hobbit: The Battle of the Five Armies",boxOffice:962.201338,genre:"Fantasy",director:"Peter Jackson",actor:"Martin Freeman"},
+  {year:2014,title:"Guardians of the Galaxy",boxOffice:773.350147,genre:"Action / Science-fiction",director:"James Gunn",actor:"Chris Pratt"},
+  {year:2014,title:"Maleficent",boxOffice:758.536735,genre:"Fantasy",director:"Robert Stromberg",actor:"Angelina Jolie"},
+  {year:2014,title:"The Hunger Games: Mockingjay \u2013 Part 1",boxOffice:755.356711,genre:"Science-fiction",director:"Francis Lawrence",actor:"Jennifer Lawrence"},
+
+  {year:2015,title:"Star Wars: The Force Awakens",boxOffice:2068.223624,genre:"Science-fiction",director:"J. J. Abrams",actor:"Harrison Ford"},
+  {year:2015,title:"Jurassic World",boxOffice:1671.537444,genre:"Science-fiction",director:"Colin Trevorrow",actor:"Chris Pratt"},
+  {year:2015,title:"Furious 7",boxOffice:1515.341399,genre:"Action",director:"James Wan",actor:"Vin Diesel"},
+  {year:2015,title:"Avengers: Age of Ultron",boxOffice:1402.80954,genre:"Action / Super-héros",director:"Joss Whedon",actor:"Robert Downey Jr."},
+  {year:2015,title:"Minions",boxOffice:1159.444662,genre:"Animation",director:"Pierre Coffin, Kyle Balda",actor:"Sandra Bullock"},
+
+  {year:2016,title:"Captain America: Civil War",boxOffice:1153.337496,genre:"Action / Super-héros",director:"Anthony & Joe Russo",actor:"Chris Evans"},
+  {year:2016,title:"Rogue One: A Star Wars Story",boxOffice:1056.057273,genre:"Science-fiction",director:"Gareth Edwards",actor:"Felicity Jones"},
+  {year:2016,title:"Finding Dory",boxOffice:1028.570889,genre:"Animation",director:"Andrew Stanton",actor:"Ellen DeGeneres"},
+  {year:2016,title:"Zootopia",boxOffice:1025.521689,genre:"Animation",director:"Byron Howard, Rich Moore",actor:"Ginnifer Goodwin"},
+  {year:2016,title:"The Jungle Book",boxOffice:967.724775,genre:"Aventure / Fantasy",director:"Jon Favreau",actor:"Neel Sethi"},
+
+  {year:2017,title:"Star Wars: The Last Jedi",boxOffice:1334.407706,genre:"Science-fiction",director:"Rian Johnson",actor:"Mark Hamill"},
+  {year:2017,title:"Beauty and the Beast",boxOffice:1266.115964,genre:"Fantasy",director:"Bill Condon",actor:"Emma Watson"},
+  {year:2017,title:"The Fate of the Furious",boxOffice:1236.005118,genre:"Action",director:"F. Gary Gray",actor:"Vin Diesel"},
+  {year:2017,title:"Despicable Me 3",boxOffice:1034.800131,genre:"Animation",director:"Kyle Balda",actor:"Steve Carell"},
+  {year:2017,title:"Jumanji: Welcome to the Jungle",boxOffice:962.102237,genre:"Aventure",director:"Jake Kasdan",actor:"Dwayne Johnson"},
+
+  {year:2018,title:"Avengers: Infinity War",boxOffice:2048.359754,genre:"Action / Super-héros",director:"Anthony & Joe Russo",actor:"Robert Downey Jr."},
+  {year:2018,title:"Black Panther",boxOffice:1347.597973,genre:"Action / Super-héros",director:"Ryan Coogler",actor:"Chadwick Boseman"},
+  {year:2018,title:"Jurassic World: Fallen Kingdom",boxOffice:1308.467944,genre:"Science-fiction",director:"J. A. Bayona",actor:"Chris Pratt"},
+  {year:2018,title:"Incredibles 2",boxOffice:1242.805359,genre:"Animation",director:"Brad Bird",actor:"Craig T. Nelson"},
+  {year:2018,title:"Aquaman",boxOffice:1148.528393,genre:"Action / Super-héros",director:"James Wan",actor:"Jason Momoa"},
+
+  {year:2019,title:"Avengers: Endgame",boxOffice:2797.501328,genre:"Action / Super-héros",director:"Anthony & Joe Russo",actor:"Robert Downey Jr."},
+  {year:2019,title:"The Lion King",boxOffice:1656.943394,genre:"Animation",director:"Jon Favreau",actor:"Donald Glover"},
+  {year:2019,title:"Frozen II",boxOffice:1450.026933,genre:"Animation",director:"Chris Buck, Jennifer Lee",actor:"Idina Menzel"},
+  {year:2019,title:"Spider-Man: Far From Home",boxOffice:1131.927996,genre:"Action / Super-héros",director:"Jon Watts",actor:"Tom Holland"},
+  {year:2019,title:"Captain Marvel",boxOffice:1128.462972,genre:"Action / Super-héros",director:"Anna Boden, Ryan Fleck",actor:"Brie Larson"},
+
+  {year:2020,title:"The Eight Hundred",boxOffice:461.421559,genre:"Guerre",director:"Guan Hu",actor:""},
+  {year:2020,title:"Bad Boys for Life",boxOffice:426.505244,genre:"Action",director:"Adil El Arbi, Bilall Fallah",actor:"Will Smith"},
+  {year:2020,title:"My People, My Homeland",boxOffice:422.39082,genre:"Comédie",director:"Collectif",actor:""},
+  {year:2020,title:"Tenet",boxOffice:365.304105,genre:"Science-fiction",director:"Christopher Nolan",actor:"John David Washington"},
+  {year:2020,title:"Sonic the Hedgehog",boxOffice:319.715683,genre:"Aventure",director:"Jeff Fowler",actor:"Ben Schwartz"},
+
+  {year:2021,title:"Spider-Man: No Way Home",boxOffice:1921.847111,genre:"Action / Super-héros",director:"Jon Watts",actor:"Tom Holland"},
+  {year:2021,title:"The Battle at Lake Changjin",boxOffice:902.548476,genre:"Guerre",director:"Chen Kaige",actor:""},
+  {year:2021,title:"Hi, Mom",boxOffice:841.674419,genre:"Comédie dramatique",director:"Jia Ling",actor:""},
+  {year:2021,title:"No Time to Die",boxOffice:774.153007,genre:"Action",director:"Cary Joji Fukunaga",actor:"Daniel Craig"},
+  {year:2021,title:"F9",boxOffice:726.229501,genre:"Action",director:"Justin Lin",actor:"Vin Diesel"},
+
+  {year:2022,title:"Avatar: The Way of Water",boxOffice:2320.250281,genre:"Science-fiction",director:"James Cameron",actor:"Sam Worthington"},
+  {year:2022,title:"Top Gun: Maverick",boxOffice:1495.696292,genre:"Action",director:"Joseph Kosinski",actor:"Tom Cruise"},
+  {year:2022,title:"Jurassic World Dominion",boxOffice:1001.97808,genre:"Science-fiction",director:"Colin Trevorrow",actor:"Chris Pratt"},
+  {year:2022,title:"Doctor Strange in the Multiverse of Madness",boxOffice:955.775804,genre:"Action / Super-héros",director:"Sam Raimi",actor:"Benedict Cumberbatch"},
+  {year:2022,title:"Minions: The Rise of Gru",boxOffice:940.203765,genre:"Animation",director:"Kyle Balda",actor:"Steve Carell"},
+
+  {year:2023,title:"Barbie",boxOffice:1445.638421,genre:"Comédie / Fantasy",director:"Greta Gerwig",actor:"Margot Robbie"},
+  {year:2023,title:"The Super Mario Bros. Movie",boxOffice:1361.992475,genre:"Animation",director:"Aaron Horvath, Michael Jelenic",actor:"Chris Pratt"},
+  {year:2023,title:"Oppenheimer",boxOffice:975.440031,genre:"Drame historique",director:"Christopher Nolan",actor:"Cillian Murphy"},
+  {year:2023,title:"Guardians of the Galaxy Vol. 3",boxOffice:845.555777,genre:"Action / Super-héros",director:"James Gunn",actor:"Chris Pratt"},
+  {year:2023,title:"Fast X",boxOffice:704.875015,genre:"Action",director:"Louis Leterrier",actor:"Vin Diesel"}
+];
+
+let filteredData = [...movieData];
+let currentTab = 'overview';
+
+const genreColors = {
+  'Action': '#d4af37',
+  'Action / Super-héros': '#d4af37',
+  'Animation': '#c9a961',
+  'Fantasy': '#b8941f',
+  'Aventure': '#b8941f',
+  'Aventure / Fantasy': '#b8941f',
+  'Sci-Fi': '#a67c00',
+  'Science-fiction': '#a67c00',
+  'Drama': '#8b7355',
+  'Drame historique': '#8b7355',
+  'Comédie': '#8b7355',
+  'Comédie / Fantasy': '#b8941f',
+  'Guerre': '#8b7355',
+  'Comédie dramatique': '#8b7355',
+  // fallback color
+};
+
+function init() {
+  populateFilters();
+  applyFilters(); // will update stats & draw everything
+  window.addEventListener('resize', () => {
+    // redraw visible chart(s)
+    drawMainChart();
+    drawGenreChart();
+    drawDirectorChart();
+    drawTimelineChart();
+    drawMovieGallery();
+  });
+}
+
+function populateFilters() {
+  const years = [...new Set(movieData.map(d => d.year))].sort((a,b)=>a-b);
+  const genres = [...new Set(movieData.map(d => d.genre))].sort();
+  const directors = [...new Set(movieData.map(d => d.director))].sort();
+  const actors = [...new Set(movieData.map(d => d.actor || 'Unknown'))].sort();
+
+  const yearSelect = document.getElementById('yearFilter');
+  years.forEach(y => {
+    const opt = document.createElement('option');
+    opt.value = y;
+    opt.textContent = y;
+    yearSelect.appendChild(opt);
+  });
+
+  const genreSelect = document.getElementById('genreFilter');
+  genres.forEach(g => {
+    const opt = document.createElement('option');
+    opt.value = g;
+    opt.textContent = g;
+    genreSelect.appendChild(opt);
+  });
+
+  const directorSelect = document.getElementById('directorFilter');
+  directors.forEach(d => {
+    const opt = document.createElement('option');
+    opt.value = d;
+    opt.textContent = d;
+    directorSelect.appendChild(opt);
+  });
+
+  const actorSelect = document.getElementById('actorFilter');
+  actors.forEach(a => {
+    const opt = document.createElement('option');
+    opt.value = a;
+    opt.textContent = a;
+    actorSelect.appendChild(opt);
+  });
+
+  document.getElementById('yearFilter').addEventListener('change', applyFilters);
+  document.getElementById('genreFilter').addEventListener('change', applyFilters);
+  document.getElementById('directorFilter').addEventListener('change', applyFilters);
+  document.getElementById('actorFilter').addEventListener('change', applyFilters);
+}
+
+function applyFilters() {
+  const year = document.getElementById('yearFilter').value;
+  const genre = document.getElementById('genreFilter').value;
+  const director = document.getElementById('directorFilter').value;
+  const actor = document.getElementById('actorFilter').value;
+
+  filteredData = movieData.filter(d => {
+    const actorVal = d.actor || 'Unknown';
+    return (year === 'all' || d.year == year) &&
+           (genre === 'all' || d.genre === genre) &&
+           (director === 'all' || d.director === director) &&
+           (actor === 'all' || actorVal === actor);
+  });
+
+  updateStats();
+  drawMainChart();
+  drawGenreChart();
+  drawDirectorChart();
+  drawTimelineChart();
+  drawMovieGallery();
+}
+
+function resetFilters() {
+  document.getElementById('yearFilter').value = 'all';
+  document.getElementById('genreFilter').value = 'all';
+  document.getElementById('directorFilter').value = 'all';
+  document.getElementById('actorFilter').value = 'all';
+  applyFilters();
+}
+
+function updateStats() {
+  const total = filteredData.length;
+  const totalRevenue = d3.sum(filteredData, d => d.boxOffice);
+  const avgRevenue = total > 0 ? (totalRevenue / total) : 0;
+  // find top genre by count
+  const genreCounts = Array.from(d3.rollup(filteredData, v => v.length, d => d.genre).entries ?
+    d3.rollup(filteredData, v => v.length, d => d.genre) : new Map());
+  let topGenre = '-';
+  if (genreCounts && genreCounts.size) {
+    topGenre = Array.from(genreCounts.entries()).sort((a,b)=>b[1]-a[1])[0][0];
+  }
+
+  document.getElementById('totalMovies').textContent = total;
+  document.getElementById('totalBoxOffice').textContent = '$' + (totalRevenue/1000).toFixed(1) + 'B'; // since boxOffice is in millions, /1000 = billions
+  document.getElementById('avgRevenue').textContent = '$' + avgRevenue.toFixed(1) + 'M';
+  document.getElementById('topGenre').textContent = topGenre;
+}
+
+// ---------- MAIN SCATTER (overview) ----------
+function drawMainChart() {
+  const container = d3.select('#mainChart');
+  container.selectAll('*').remove();
+
+  if (!filteredData.length) {
+    container.append('p').style('padding','80px').style('text-align','center').style('color','#8b7355').text('No data for the selected filters');
+    return;
+  }
+
+  const margin = {top:40,right:60,bottom:60,left:80};
+  const width = container.node().clientWidth - margin.left - margin.right;
+  const height = 480 - margin.top - margin.bottom;
+
+  const svg = container.append('svg')
+    .attr('width', width + margin.left + margin.right)
+    .attr('height', height + margin.top + margin.bottom)
+    .append('g').attr('transform', `translate(${margin.left},${margin.top})`);
+
+  const x = d3.scaleLinear()
+    .domain([d3.min(filteredData, d => d.year)-0.5, d3.max(filteredData, d => d.year)+0.5])
+    .range([0, width]);
+
+  const y = d3.scaleLinear()
+    .domain([0, d3.max(filteredData, d => d.boxOffice) * 1.06])
+    .range([height, 0]);
+
+  // grid + axes
+  svg.append('g').attr('class','grid').call(d3.axisLeft(y).tickSize(-width).tickFormat(''));
+  svg.append('g').attr('class','axis').attr('transform',`translate(0,${height})`).call(d3.axisBottom(x).ticks((d3.max(filteredData,d=>d.year)-d3.min(filteredData,d=>d.year))+1).tickFormat(d3.format('d')));
+  svg.append('g').attr('class','axis').call(d3.axisLeft(y).tickFormat(d => '$' + d + 'M'));
+
+  // points
+  const tooltip = d3.select('#tooltip');
+
+  const rScale = d3.scaleSqrt().domain([0, d3.max(filteredData, d=>d.boxOffice)]).range([4,18]);
+
+  svg.selectAll('circle')
+    .data(filteredData, d => d.title + d.year)
+    .join('circle')
+    .attr('cx', d => x(d.year))
+    .attr('cy', d => y(d.boxOffice))
+    .attr('r', 0)
+    .attr('fill', d => genreColors[d.genre] || '#d4af37')
+    .attr('stroke', '#8b7355')
+    .attr('stroke-width', 1.5)
+    .attr('opacity', 0.95)
+    .on('mouseover', function(event,d){
+        d3.select(this).attr('stroke-width',3).attr('opacity',1.0);
+        tooltip.classed('active', true)
+          .html(`<div class="tooltip-title">${d.title}</div>
+                 <strong>Year:</strong> ${d.year}<br>
+                 <strong>Genre:</strong> ${d.genre}<br>
+                 <strong>Box Office:</strong> $${d.boxOffice.toFixed(1)}M<br>
+                 <strong>Director:</strong> ${d.director}<br>
+                 <strong>Star:</strong> ${d.actor || 'N/A'}`)
+          .style('left', (event.pageX + 12) + 'px')
+          .style('top', (event.pageY - 12) + 'px');
+    })
+    .on('mousemove', function(event){
+        tooltip.style('left', (event.pageX + 12) + 'px').style('top', (event.pageY - 12) + 'px');
+    })
+    .on('mouseout', function(){
+        d3.select(this).attr('stroke-width',1.5).attr('opacity',0.95);
+        tooltip.classed('active', false);
+    })
+    .transition().duration(700)
+    .attr('r', d => rScale(d.boxOffice));
+}
+
+// ---------- GENRE CHART (bar) ----------
+function drawGenreChart() {
+  const container = d3.select('#genreChart');
+  container.selectAll('*').remove();
+
+  if (!filteredData.length) {
+    container.append('p').style('padding','80px').style('text-align','center').style('color','#8b7355').text('No data for the selected filters');
+    return;
+  }
+
+  // aggregate by genre
+  const genreMap = d3.rollup(filteredData, v => d3.sum(v, d => d.boxOffice), d => d.genre);
+  const genreData = Array.from(genreMap, ([genre, revenue]) => ({genre, revenue})).sort((a,b)=>b.revenue - a.revenue);
+
+  const margin = {top:20,right:20,bottom:120,left:80};
+  const width = container.node().clientWidth - margin.left - margin.right;
+  const height = 480 - margin.top - margin.bottom;
+
+  const svg = container.append('svg').attr('width', width + margin.left + margin.right).attr('height', height + margin.top + margin.bottom)
+    .append('g').attr('transform', `translate(${margin.left},${margin.top})`);
+
+  const x = d3.scaleBand().domain(genreData.map(d=>d.genre)).range([0,width]).padding(0.25);
+  const y = d3.scaleLinear().domain([0, d3.max(genreData, d=>d.revenue) * 1.1]).range([height,0]);
+
+  svg.append('g').attr('transform',`translate(0,${height})`).attr('class','axis')
+    .call(d3.axisBottom(x)).selectAll('text').attr('transform','rotate(-45)').style('text-anchor','end');
+
+  svg.append('g').attr('class','axis').call(d3.axisLeft(y).tickFormat(d => '$' + d + 'M'));
+
+  const tooltip = d3.select('#tooltip');
+
+  svg.selectAll('rect')
+    .data(genreData)
+    .join('rect')
+    .attr('x', d => x(d.genre))
+    .attr('y', height)
+    .attr('width', x.bandwidth())
+    .attr('height', 0)
+    .attr('fill', d => genreColors[d.genre] || '#d4af37')
+    .attr('opacity', 0.95)
+    .on('mouseover', function(event,d){
+      d3.select(this).attr('opacity',1);
+      tooltip.classed('active', true)
+        .html(`<div class="tooltip-title">${d.genre}</div>
+               <strong>Total Revenue:</strong> $${d.revenue.toFixed(1)}M`);
+      tooltip.style('left', (event.pageX + 12) + 'px').style('top', (event.pageY - 12) + 'px');
+    })
+    .on('mousemove', function(event){
+      tooltip.style('left', (event.pageX + 12) + 'px').style('top', (event.pageY - 12) + 'px');
+    })
+    .on('mouseout', function(){
+      d3.select(this).attr('opacity',0.95);
+      tooltip.classed('active', false);
+    })
+    .transition().duration(700)
+    .attr('y', d => y(d.revenue))
+    .attr('height', d => height - y(d.revenue));
+}
+
+// ---------- DIRECTOR CHART (horizontal bars) ----------
+function drawDirectorChart() {
+  const container = d3.select('#directorChart');
+  container.selectAll('*').remove();
+
+  if (!filteredData.length) {
+    container.append('p').style('padding','80px').style('text-align','center').style('color','#8b7355').text('No data for the selected filters');
+    return;
+  }
+
+  const directorMap = d3.rollup(filteredData, v => ({count: v.length, revenue: d3.sum(v, d=>d.boxOffice)}), d => d.director);
+  const directorData = Array.from(directorMap, ([director,data]) => ({director, ...data})).sort((a,b)=>b.revenue - a.revenue).slice(0,10);
+
+  const margin = {top:20,right:20,bottom:40,left:220};
+  const width = container.node().clientWidth - margin.left - margin.right;
+  const height = 480 - margin.top - margin.bottom;
+
+  const svg = container.append('svg').attr('width', width + margin.left + margin.right).attr('height', height + margin.top + margin.bottom)
+    .append('g').attr('transform', `translate(${margin.left},${margin.top})`);
+
+  const x = d3.scaleLinear().domain([0, d3.max(directorData, d => d.revenue) * 1.05]).range([0, width]);
+  const y = d3.scaleBand().domain(directorData.map(d => d.director)).range([0, height]).padding(0.15);
+
+  svg.append('g').attr('class','axis').call(d3.axisLeft(y));
+  svg.append('g').attr('class','axis').attr('transform',`translate(0,${height})`).call(d3.axisBottom(x).tickFormat(d=> '$' + d + 'M'));
+
+  const tooltip = d3.select('#tooltip');
+
+  svg.selectAll('rect')
+    .data(directorData)
+    .join('rect')
+    .attr('x', 0)
+    .attr('y', d => y(d.director))
+    .attr('height', y.bandwidth())
+    .attr('width', 0)
+    .attr('fill', '#d4af37')
+    .attr('opacity', 0.95)
+    .on('mouseover', function(event,d){
+      d3.select(this).attr('fill','#b8941f');
+      tooltip.classed('active', true)
+        .html(`<div class="tooltip-title">${d.director}</div>
+               <strong>Movies (in view):</strong> ${d.count}<br>
+               <strong>Total Revenue:</strong> $${d.revenue.toFixed(1)}M`);
+      tooltip.style('left', (event.pageX + 12) + 'px').style('top', (event.pageY - 12) + 'px');
+    })
+    .on('mousemove', function(event){
+      tooltip.style('left', (event.pageX + 12) + 'px').style('top', (event.pageY - 12) + 'px');
+    })
+    .on('mouseout', function(){
+      d3.select(this).attr('fill','#d4af37');
+      tooltip.classed('active', false);
+    })
+    .transition().duration(700)
+    .attr('width', d => x(d.revenue));
+}
+
+// ---------- TIMELINE CHART (area + line) ----------
+function drawTimelineChart() {
+  const container = d3.select('#timelineChart');
+  container.selectAll('*').remove();
+
+  if (!filteredData.length) {
+    container.append('p').style('padding','80px').style('text-align','center').style('color','#8b7355').text('No data for the selected filters');
+    return;
+  }
+
+  const yearMap = d3.rollup(filteredData, v => ({count: v.length, revenue: d3.sum(v, d => d.boxOffice)}), d => d.year);
+  const yearData = Array.from(yearMap, ([year, data]) => ({year:+year, ...data})).sort((a,b)=>a.year - b.year);
+
+  const margin = {top:40,right:60,bottom:60,left:80};
+  const width = container.node().clientWidth - margin.left - margin.right;
+  const height = 480 - margin.top - margin.bottom;
+
+  const svg = container.append('svg').attr('width', width + margin.left + margin.right).attr('height', height + margin.top + margin.bottom)
+    .append('g').attr('transform', `translate(${margin.left},${margin.top})`);
+
+  const x = d3.scaleLinear().domain(d3.extent(yearData, d => d.year)).range([0, width]);
+  const y = d3.scaleLinear().domain([0, d3.max(yearData, d => d.revenue) * 1.06]).range([height, 0]);
+
+  svg.append('g').attr('class','grid').call(d3.axisLeft(y).tickSize(-width).tickFormat(''));
+  svg.append('g').attr('class','axis').attr('transform',`translate(0,${height})`).call(d3.axisBottom(x).ticks(yearData.length).tickFormat(d3.format('d')));
+  svg.append('g').attr('class','axis').call(d3.axisLeft(y).tickFormat(d => '$' + d + 'M'));
+
+  const gradient = svg.append('defs').append('linearGradient').attr('id','grad1').attr('x1','0%').attr('y1','0%').attr('x2','0%').attr('y2','100%');
+  gradient.append('stop').attr('offset','0%').attr('stop-color','#d4af37').attr('stop-opacity',0.35);
+  gradient.append('stop').attr('offset','100%').attr('stop-color','#d4af37').attr('stop-opacity',0);
+
+  const area = d3.area()
+    .x(d => x(d.year))
+    .y0(height)
+    .y1(d => y(d.revenue))
+    .curve(d3.curveMonotoneX);
+
+  svg.append('path').datum(yearData).attr('fill','url(#grad1)').attr('d', area);
+
+  const line = d3.line().x(d => x(d.year)).y(d => y(d.revenue)).curve(d3.curveMonotoneX);
+  svg.append('path').datum(yearData).attr('fill','none').attr('stroke','#d4af37').attr('stroke-width',3).attr('d', line);
+
+  const tooltip = d3.select('#tooltip');
+
+  svg.selectAll('circle')
+    .data(yearData)
+    .join('circle')
+    .attr('cx', d => x(d.year))
+    .attr('cy', d => y(d.revenue))
+    .attr('r', 6)
+    .attr('fill', '#d4af37')
+    .attr('stroke', '#0a0a0a')
+    .attr('stroke-width', 2)
+    .on('mouseover', function(event,d){
+      d3.select(this).attr('r',10);
+      tooltip.classed('active', true)
+        .html(`<div class="tooltip-title">${d.year}</div>
+               <strong>Movies:</strong> ${d.count}<br>
+               <strong>Total Revenue:</strong> $${d.revenue.toFixed(1)}M`);
+      tooltip.style('left', (event.pageX + 12) + 'px').style('top', (event.pageY - 12) + 'px');
+    })
+    .on('mousemove', function(event){
+      tooltip.style('left', (event.pageX + 12) + 'px').style('top', (event.pageY - 12) + 'px');
+    })
+    .on('mouseout', function(){
+      d3.select(this).attr('r',6);
+      tooltip.classed('active', false);
+    });
+}
+
+// ---------- MOVIE GALLERY ----------
+function drawMovieGallery() {
+  const grid = d3.select('#movieGrid');
+  grid.selectAll('*').remove();
+
+  if (!filteredData.length) {
+    grid.append('p').style('padding','80px').style('text-align','center').style('color','#8b7355').style('grid-column','1 / -1').text('No movies available for the selected filters');
+    return;
+  }
+
+  const placeholder = colorForGenre => `https://via.placeholder.com/300x450/${colorForGenre.replace('#','')}/0a0a0a?text=Poster`;
+
+  const cards = grid.selectAll('.movie-card').data(filteredData, d => d.title).join('div').attr('class','movie-card');
+
+  cards.append('img').attr('class','movie-poster')
+    .attr('src', d => placeholder((genreColors[d.genre]||'#d4af37')))
+    .attr('alt', d => d.title);
+
+  const info = cards.append('div').attr('class','movie-info');
+
+  info.append('div').attr('class','movie-title').text(d => d.title);
+  info.append('div').attr('class','movie-details').html(d => `<strong>${d.year}</strong> • ${d.genre}<br>Box Office: <strong>$${d.boxOffice.toFixed(1)}M</strong><br>Director: ${d.director}<br>Star: ${d.actor || 'N/A'}`);
+}
+
+// ---------- tabs ----------
+function switchTab(event, tab) {
+  currentTab = tab;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  event.target.classList.add('active');
+
+  document.getElementById('overviewViz').style.display = 'none';
+  document.getElementById('genreViz').style.display = 'none';
+  document.getElementById('directorViz').style.display = 'none';
+  document.getElementById('timelineViz').style.display = 'none';
+  document.getElementById('galleryViz').style.display = 'none';
+
+  if (tab === 'overview') {
+    document.getElementById('overviewViz').style.display = 'block';
+    drawMainChart();
+  } else if (tab === 'genre') {
+    document.getElementById('genreViz').style.display = 'block';
+    drawGenreChart();
+  } else if (tab === 'director') {
+    document.getElementById('directorViz').style.display = 'block';
+    drawDirectorChart();
+  } else if (tab === 'timeline') {
+    document.getElementById('timelineViz').style.display = 'block';
+    drawTimelineChart();
+  } else if (tab === 'gallery') {
+    document.getElementById('galleryViz').style.display = 'block';
+    drawMovieGallery();
+  }
+}
+
+// initialize
+init();
+</script>
+</body>
+</html>
