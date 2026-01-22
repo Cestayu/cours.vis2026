@@ -1,1 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Cinema</title>
+
+<!-- Vintage-style Google Font -->
+<link href="https://fonts.googleapis.com/css2?family=Limelight&display=swap" rel="stylesheet">
+
+<style>
+    body {
+        margin: 0;
+        height: 100vh;
+        background: radial-gradient(circle at center, #111 0%, #000 70%);
+        display: flex;
+        justify-content: center;
+        align-items:
 # cours.vis2026
