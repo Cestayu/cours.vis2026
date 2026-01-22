@@ -2,219 +2,248 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Cinema Dashboard</title>
-
+  <title>Cinema Dashboard - Champion Edition</title>
   <link href="https://fonts.googleapis.com/css2?family=Limelight&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
   <style>
     body {
       margin: 0;
       min-height: 100vh;
-      background: radial-gradient(circle at center, #111 0%, #000 70%);
+      background: radial-gradient(circle at center, #1a1a1a 0%, #000 80%);
       display: flex;
       flex-direction: column;
       align-items: center;
       color: #f5d76e;
-      overflow-x: hidden;
       font-family: 'Segoe UI', Arial, sans-serif;
+      overflow-x: hidden;
     }
 
     h1 {
-      margin-top: 40px;
+      margin-top: 30px;
       font-family: 'Limelight', cursive;
-      font-size: 80px;
-      letter-spacing: 8px;
+      font-size: 70px;
+      color: #f7c873;
+      text-shadow: 0 0 15px rgba(247, 200, 115, 0.5);
       text-transform: uppercase;
-      color: #f7c873;
-      text-shadow: 0 0 10px rgba(255, 180, 80, 0.6), 0 0 25px rgba(255, 140, 0.5);
+      letter-spacing: 5px;
     }
 
-    /* ---- Tabs ---- */
-    .tabs {
-      display: flex;
-      gap: 20px;
-      margin: 30px 0 40px;
+    /* --- Interactive Flip Card --- */
+    #champion-section {
+      width: 90%;
+      max-width: 800px;
+      margin-bottom: 40px;
+      perspective: 1500px;
     }
 
-    .tab {
-      background: transparent;
-      border: 1px solid rgba(255,215,120,0.4);
-      color: #f7c873;
-      padding: 10px 22px;
-      border-radius: 30px;
+    .flip-card {
+      width: 100%;
+      height: 280px;
       cursor: pointer;
-      font-family: 'Limelight', cursive;
-      letter-spacing: 1px;
-      transition: all 0.3s ease;
     }
 
-    .tab.active {
+    .flip-card-inner {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+      transform-style: preserve-3d;
+    }
+
+    .flip-card:hover .flip-card-inner {
+      transform: rotateY(180deg);
+    }
+
+    .flip-card-front, .flip-card-back {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      -webkit-backface-visibility: hidden;
+      backface-visibility: hidden;
+      border: 2px solid #f7c873;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      padding: 25px;
+      box-sizing: border-box;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+
+    .flip-card-front {
+      background: linear-gradient(145deg, #222, #050505);
+    }
+
+    .flip-card-back {
+      transform: rotateY(180deg);
       background: #f7c873;
       color: #000;
-      box-shadow: 0 0 15px rgba(255,200,100,0.6);
+      flex-direction: column;
+      justify-content: center;
+      text-align: center;
     }
 
-    .tab-content {
-      display: none;
+    .champion-poster {
+      width: 160px;
+      height: 230px;
+      border-radius: 10px;
+      background-size: cover;
+      margin-right: 30px;
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+
+    /* --- Layout Elements --- */
+    #boxoffice-viz, #trends-viz {
       width: 90%;
       max-width: 1000px;
-    }
-
-    .tab-content.active {
-      display: block;
-    }
-
-    /* ---- Search ---- */
-    .search-container {
-      background: rgba(255, 215, 120, 0.1);
-      padding: 20px;
-      border-radius: 15px;
-      display: flex;
-      gap: 15px;
-      flex-wrap: wrap;
-      justify-content: center;
-      margin-bottom: 20px;
-      border: 1px solid rgba(255, 215, 120, 0.2);
-    }
-
-    .search-container input, .search-container select {
-      padding: 10px;
-      border-radius: 5px;
-      border: 1px solid #f7c873;
-      background: #111;
-      color: #f7c873;
-      outline: none;
-      min-width: 200px;
-    }
-
-    /* ---- Sections ---- */
-    section {
-      background: rgba(0,0,0,0.6);
-      border: 1px solid rgba(255, 215, 120, 0.3);
+      background: rgba(0,0,0,0.7);
+      border: 1px solid rgba(247, 200, 115, 0.2);
       border-radius: 20px;
       padding: 30px;
       margin-bottom: 40px;
     }
 
-    h2 {
-      text-align: center;
-      font-family: 'Limelight', cursive;
-      color: #f7c873;
-    }
+    .year-display { font-size: 64px; font-family: 'Limelight'; color: #f7c873; }
+    
+    .films-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px; margin-top: 20px; }
 
-    .year-display {
-      font-size: 54px;
-      font-family: 'Limelight';
-      color: #f7c873;
-      text-align: center;
-    }
-
-    .films-panel {
-      display: grid;
-      gap: 15px;
-    }
-
-    .film {
+    .film-item {
       display: flex;
-      padding: 12px;
-      border: 1px solid rgba(255, 215, 120, 0.2);
-      border-radius: 14px;
-      background: rgba(20,20,20,0.8);
-      position: relative;
-    }
-
-    .poster {
-      width: 80px;
-      height: 110px;
-      border-radius: 8px;
-      margin-right: 20px;
-      background-size: cover;
-      background-position: center;
-    }
-
-    .hover-details {
-      position: absolute;
-      right: 10px;
-      background: #000;
-      border: 1px solid #f7c873;
+      align-items: center;
       padding: 10px;
-      display: none;
-      border-radius: 8px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 10px;
+      border-left: 4px solid #f7c873;
     }
 
-    .film:hover .hover-details {
-      display: block;
-    }
+    .poster-mini { width: 45px; height: 65px; background-size: cover; border-radius: 4px; margin-right: 15px; }
+
+    input[type=range] { width: 100%; accent-color: #f7c873; cursor: pointer; }
+    
+    .gold-label { color: #f7c873; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
   </style>
 </head>
-
 <body>
 
-<h1>Cinema</h1>
+  <h1>Cinema</h1>
 
-<div class="tabs">
-  <button class="tab active" data-tab="boxoffice">Box Office</button>
-  <button class="tab" data-tab="genres">Genres</button>
-  <button class="tab" data-tab="directors">Directors</button>
-  <button class="tab" data-tab="countries">Countries & Gender</button>
-</div>
-
-<!-- ================= BOX OFFICE TAB ================= -->
-<div class="tab-content active" id="tab-boxoffice">
-
-  <div class="search-container">
-    <input type="text" id="search-director" placeholder="Filter by Director...">
-    <select id="filter-genre">
-      <option value="All">All Genres</option>
-      <option value="Action">Action</option>
-      <option value="Animation">Animation</option>
-      <option value="Science-fiction">Science-fiction</option>
-      <option value="Fantasy">Fantasy</option>
-    </select>
-  </div>
-
-  <section>
-    <h2>Annual Rankings</h2>
-    <div class="year-display" id="boxoffice-year">2013</div>
-    <input type="range" min="2013" max="2023" value="2013" id="boxoffice-slider" style="width:100%">
-    <div class="films-panel" id="boxoffice-films"></div>
+  <section id="champion-section">
+    <p style="text-align: center;" class="gold-label">🏆 Annual Champion (Hover for Details) 🏆</p>
+    <div id="champ-mount"></div>
   </section>
 
-  <section>
-    <h2>Box Office Trends ($ Billions)</h2>
+  <section id="boxoffice-viz">
+    <div style="text-align: center;">
+      <div class="year-display" id="year-label">2013</div>
+      <input type="range" min="2013" max="2023" step="1" value="2013" id="year-slider">
+    </div>
+    <div class="films-list" id="films-grid"></div>
+  </section>
+
+  <section id="trends-viz">
+    <h2 style="font-family: 'Limelight'; text-align: center;">Revenue Trends ($ Billions)</h2>
     <canvas id="trendChart"></canvas>
   </section>
 
-</div>
+  <script>
+    const fullData = [
+      {"year":2013,"rank":1,"title":"Frozen","boxOffice":1280802282,"genre":"Animation","director":"Chris Buck, Jennifer Lee","poster":"https://image.tmdb.org/t/p/w500/kgwjIb1CkFCftymFGOtdLlOrWYv.jpg","desc":"A princess sets off on a journey alongside an iceman and his reindeer to find her sister."},
+      {"year":2014,"rank":1,"title":"Transformers: Age of Extinction","boxOffice":1104054072,"genre":"Action","director":"Michael Bay","poster":"https://image.tmdb.org/t/p/w500/jyzrfx2WaeY60kYZpPYepSjGz4S.jpg","desc":"Autobots must escape sight of a bounty hunter who has taken control of the kinetic energy."},
+      {"year":2015,"rank":1,"title":"Star Wars: The Force Awakens","boxOffice":2068223624,"genre":"Sci-Fi","director":"J. J. Abrams","poster":"https://image.tmdb.org/t/p/w500/wqnLdwVXoBjKibFRR5U3y0aDUhs.jpg","desc":"A new threat to the galaxy rises as Rey and Finn join forces with Han Solo and Chewbacca."},
+      {"year":2016,"rank":1,"title":"Captain America: Civil War","boxOffice":1153337496,"genre":"Action","director":"Russo Brothers","poster":"https://image.tmdb.org/t/p/w500/rAGiXaUfPu0D2BJ1JMQzJiD8tFl.jpg","desc":"Political involvement in the Avengers' affairs causes a rift between Captain America and Iron Man."},
+      {"year":2017,"rank":1,"title":"Star Wars: The Last Jedi","boxOffice":1334407706,"genre":"Sci-Fi","director":"Rian Johnson","poster":"https://image.tmdb.org/t/p/w500/kOVEVeg59E0wsnXmF9nrh6OmWII.jpg","desc":"The Resistance prepares for a final stand against the First Order while Rey seeks Luke Skywalker."},
+      {"year":2018,"rank":1,"title":"Avengers: Infinity War","boxOffice":2048359754,"genre":"Action","director":"Russo Brothers","poster":"https://image.tmdb.org/t/p/w500/7WsyChQLEftFiDOVTGkv3hFpyyt.jpg","desc":"The Avengers and their allies must sacrifice all to defeat Thanos before he ruins the universe."},
+      {"year":2019,"rank":1,"title":"Avengers: Endgame","boxOffice":2797501328,"genre":"Action","director":"Russo Brothers","poster":"https://image.tmdb.org/t/p/w500/or06FN3Dka5tukK1e9sl16pB3iy.jpg","desc":"The remaining Avengers take one final stand in Marvel's conclusion to twenty-two films."},
+      {"year":2020,"rank":1,"title":"The Eight Hundred","boxOffice":461421559,"genre":"War","director":"Guan Hu","poster":"https://image.tmdb.org/t/p/w500/pk4GFAALvJhckzPY5h3L1RkfSD6.jpg","desc":"During the War of Resistance, 800 soldiers defend a warehouse against the Japanese army."},
+      {"year":2021,"rank":1,"title":"Spider-Man: No Way Home","boxOffice":1921847111,"genre":"Action","director":"Jon Watts","poster":"https://image.tmdb.org/t/p/w500/1g0dhYtq4irTY1GPXvft6k4YLjm.jpg","desc":"Peter Parker's identity is revealed, leading him to seek help from Doctor Strange."},
+      {"year":2022,"rank":1,"title":"Avatar: The Way of Water","boxOffice":2320250281,"genre":"Sci-Fi","director":"James Cameron","poster":"https://image.tmdb.org/t/p/w500/t6HIqrRAclMCA60NsSmeqe9RmNV.jpg","desc":"Jake Sully and Ney'tiri must protect their family from a familiar threat on Pandora."},
+      {"year":2023,"rank":1,"title":"Barbie","boxOffice":1445638421,"genre":"Comedy","director":"Greta Gerwig","poster":"https://image.tmdb.org/t/p/w500/iuFNMS8U5cb6xfzi51Dbkovj7vM.jpg","desc":"Barbie suffers a crisis and leaves Barbie Land for the Real World to find her purpose."}
+    ];
 
-<!-- ================= OTHER TABS ================= -->
-<div class="tab-content" id="tab-genres">
-  <h2>Genre Analysis</h2>
-  <p style="text-align:center">Coming soon</p>
-</div>
+    // Additional data to fill the grid (Rank 2-3 for variety)
+    const secondaryData = [
+      {"year":2013,"rank":2,"title":"Iron Man 3","boxOffice":1214811252,"genre":"Action","poster":"https://image.tmdb.org/t/p/w500/qhPtAc1TKbMPqNvcdXSOn9Bn7hZ.jpg"},
+      {"year":2015,"rank":2,"title":"Jurassic World","boxOffice":1671537444,"genre":"Sci-Fi","poster":"https://image.tmdb.org/t/p/w500/jIlQHSUc1NnqhbWtkkdIrYLiNl7.jpg"},
+      {"year":2019,"rank":2,"title":"The Lion King","boxOffice":1656943394,"genre":"Animation","poster":"https://image.tmdb.org/t/p/w500/dzBtMocZuJbjLOXvrl4zGYigDzh.jpg"},
+      {"year":2023,"rank":2,"title":"Super Mario Bros.","boxOffice":1361992475,"genre":"Animation","poster":"https://image.tmdb.org/t/p/w500/qNBAXBIQlnOThrVvA6mA2B5ggV6.jpg"}
+    ];
 
-<div class="tab-content" id="tab-directors">
-  <h2>Director Analysis</h2>
-  <p style="text-align:center">Coming soon</p>
-</div>
+    const slider = document.getElementById("year-slider");
+    const label = document.getElementById("year-label");
+    const champMount = document.getElementById("champ-mount");
+    const grid = document.getElementById("films-grid");
 
-<div class="tab-content" id="tab-countries">
-  <h2>Countries & Gender</h2>
-  <p style="text-align:center">Coming soon</p>
-</div>
+    function update() {
+      const yr = slider.value;
+      label.textContent = yr;
+      
+      const champ = fullData.find(d => d.year == yr);
+      const list = [...fullData, ...secondaryData].filter(d => d.year == yr).sort((a,b) => a.rank - b.rank);
 
-<script>
-  // TAB LOGIC
-  document.querySelectorAll(".tab").forEach(tab => {
-    tab.addEventListener("click", () => {
-      document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
-      document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
-      tab.classList.add("active");
-      document.getElementById("tab-" + tab.dataset.tab).classList.add("active");
-    });
-  });
-</script>
+      // Render 3D Flip Card
+      champMount.innerHTML = `
+        <div class="flip-card">
+          <div class="flip-card-inner">
+            <div class="flip-card-front">
+              <div class="champion-poster" style="background-image:url('${champ.poster}')"></div>
+              <div>
+                <h2 style="font-family:'Limelight'; margin:0;">${champ.title}</h2>
+                <p class="gold-label" style="font-size:1.4em;">$${(champ.boxOffice/1e9).toFixed(2)}B</p>
+                <p>Director: <b>${champ.director}</b></p>
+                <p>Genre: ${champ.genre}</p>
+              </div>
+            </div>
+            <div class="flip-card-back">
+              <h2 style="font-family:'Limelight'">SYNOPSIS</h2>
+              <p style="padding: 0 30px; font-size: 1.1em; line-height: 1.6;">${champ.desc}</p>
+              <div style="margin-top: 20px; font-weight: bold;">Top Year Performance</div>
+            </div>
+          </div>
+        </div>
+      `;
 
+      // Render Grid
+      grid.innerHTML = list.map(f => `
+        <div class="film-item">
+          <div class="poster-mini" style="background-image:url('${f.poster}')"></div>
+          <div>
+            <div style="font-weight:bold">#${f.rank} ${f.title}</div>
+            <div style="font-size:0.85em; color:#aaa">$${(f.boxOffice/1e6).toFixed(0)}M Revenue</div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function initChart() {
+      const ctx = document.getElementById('trendChart').getContext('2d');
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: fullData.map(d => d.year),
+          datasets: [{
+            label: 'Champion Gross ($ Billions)',
+            data: fullData.map(d => d.boxOffice / 1e9),
+            borderColor: '#f7c873',
+            backgroundColor: 'rgba(247, 200, 115, 0.2)',
+            fill: true,
+            tension: 0.4,
+            pointRadius: 6,
+            pointHoverRadius: 10
+          }]
+        },
+        options: {
+          animation: { duration: 2500 },
+          plugins: { legend: { display: false } },
+          scales: {
+            y: { ticks: { color: '#f7c873' }, grid: { color: '#333' } },
+            x: { ticks: { color: '#f7c873' } }
+          }
+        }
+      });
+    }
+
+    slider.addEventListener("input", update);
+    update();
+    initChart();
+  </script>
 </body>
 </html>
