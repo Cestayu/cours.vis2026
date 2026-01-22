@@ -3,11 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <title>Cinema Box Office Royale</title>
-<link href="https://fonts.googleapis.com/css2?family=Limelight&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Limelight&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
 <style>
   :root {
     --gold: #f7c873;
     --gold-shadow: rgba(247, 200, 115, 0.5);
+    --glass: rgba(255, 255, 255, 0.07);
   }
 
   body {
@@ -22,27 +23,26 @@
     align-items: center;
     color: #f5d76e;
     overflow-x: hidden;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: 'Inter', sans-serif;
     transition: background-image 0.8s ease-in-out;
   }
 
-  /* Overlay pour assombrir l'image de fond dynamique */
   body::before {
     content: "";
     position: fixed;
     top: 0; left: 0; right: 0; bottom: 0;
-    background: radial-gradient(circle at center, rgba(0,0,0,0.7) 0%, #000 100%);
+    background: radial-gradient(circle at center, rgba(0,0,0,0.6) 0%, #000 100%);
     z-index: 0;
   }
 
   h1 {
-    margin-top: 40px;
+    margin-top: 60px;
     font-family: 'Limelight', cursive;
-    font-size: clamp(48px, 10vw, 96px);
+    font-size: clamp(48px, 8vw, 90px);
     letter-spacing: 8px;
     text-transform: uppercase;
     color: var(--gold);
-    text-shadow: 0 0 20px var(--gold-shadow);
+    text-shadow: 0 0 30px var(--gold-shadow);
     z-index: 2;
     text-align: center;
   }
@@ -52,152 +52,188 @@
     width: 90%;
     max-width: 1100px;
     margin-bottom: 60px;
-    background: rgba(0,0,0,0.85);
-    border: 1px solid rgba(255, 215, 120, 0.2);
-    border-radius: 20px;
-    padding: 40px;
-    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+    background: rgba(0,0,0,0.8);
+    border: 1px solid rgba(255, 215, 120, 0.1);
+    border-radius: 30px;
+    padding: 50px;
+    box-shadow: 0 30px 60px rgba(0,0,0,0.8);
     z-index: 2;
-    backdrop-filter: blur(10px);
+    backdrop-filter: blur(20px);
   }
 
+  /* Modified Search & Controls Section */
   .controls {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 30px;
-    margin-bottom: 30px;
+    display: flex;
+    flex-direction: column;
     align-items: center;
+    gap: 35px;
+    margin-bottom: 50px;
   }
 
-  @media (max-width: 768px) { .controls { grid-template-columns: 1fr; } }
+  .search-wrapper {
+    position: relative;
+    width: 100%;
+    max-width: 650px;
+  }
+
+  .search-wrapper::before {
+    content: "🔍";
+    position: absolute;
+    left: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 18px;
+    opacity: 0.5;
+    z-index: 3;
+  }
+
+  #search-bar {
+    width: 100%;
+    padding: 18px 25px 18px 55px;
+    border-radius: 50px;
+    border: 1px solid rgba(247, 200, 115, 0.2);
+    background: var(--glass);
+    color: white;
+    font-size: 18px;
+    outline: none;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    box-sizing: border-box;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
+  }
+
+  #search-bar:focus {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: var(--gold);
+    box-shadow: 0 0 25px var(--gold-shadow);
+    transform: scale(1.02);
+  }
+
+  .slider-container {
+    width: 100%;
+    max-width: 500px;
+    text-align: center;
+  }
 
   .year-display {
     font-family: 'Limelight', cursive;
-    font-size: 54px;
+    font-size: 72px;
+    line-height: 1;
     color: var(--gold);
-    text-shadow: 0 0 10px var(--gold-shadow);
+    text-shadow: 0 0 15px var(--gold-shadow);
+    margin-bottom: 15px;
   }
 
   input[type=range] {
     width: 100%;
     accent-color: var(--gold);
     cursor: pointer;
+    height: 6px;
   }
 
-  #search-bar {
-    padding: 12px 20px;
-    border-radius: 30px;
-    border: 1px solid var(--gold);
-    background: rgba(255,255,255,0.05);
-    color: white;
-    font-size: 16px;
-    outline: none;
-    transition: all 0.3s;
-  }
-
-  #search-bar:focus {
-    background: rgba(255,255,255,0.1);
-    box-shadow: 0 0 15px var(--gold-shadow);
-  }
-
+  /* Films Panel Styling */
   .films-panel {
     display: grid;
-    gap: 20px;
+    gap: 25px;
   }
 
   .film {
     display: flex;
     align-items: center;
-    padding: 15px;
-    border: 1px solid rgba(255, 215, 120, 0.15);
-    border-radius: 14px;
-    background: rgba(255,255,255,0.03);
-    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    animation: slideIn 0.5s ease forwards;
+    padding: 20px;
+    border: 1px solid rgba(255, 215, 120, 0.1);
+    border-radius: 20px;
+    background: rgba(255,255,255,0.02);
+    transition: all 0.3s ease;
+    animation: slideIn 0.6s ease forwards;
     opacity: 0;
   }
 
   @keyframes slideIn {
-    from { opacity: 0; transform: translateX(-20px); }
-    to { opacity: 1; transform: translateX(0); }
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
   }
 
   .film:hover {
-    transform: scale(1.02);
-    background: rgba(255,255,255,0.08);
+    transform: translateX(10px);
+    background: rgba(255,255,255,0.06);
     border-color: var(--gold);
   }
 
   .poster {
-    width: 100px;
-    height: 150px;
-    border-radius: 8px;
+    width: 110px;
+    height: 165px;
+    border-radius: 12px;
     background-size: cover;
     background-position: center;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.6);
     flex-shrink: 0;
   }
 
   .info {
-    margin-left: 25px;
+    margin-left: 30px;
     flex: 1;
   }
 
   .film-title {
     font-family: 'Limelight', cursive;
-    font-size: 24px;
-    margin-bottom: 8px;
+    font-size: 28px;
+    margin-bottom: 10px;
     color: var(--gold);
   }
 
   .meta-grid {
     display: flex;
     flex-wrap: wrap;
-    gap: 15px;
-    font-size: 14px;
-    opacity: 0.9;
+    gap: 12px;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
   }
 
   .tag {
-    background: rgba(247, 200, 115, 0.15);
-    padding: 4px 10px;
-    border-radius: 4px;
-    border: 1px solid rgba(247, 200, 115, 0.3);
+    background: rgba(247, 200, 115, 0.1);
+    padding: 6px 12px;
+    border-radius: 6px;
+    border: 1px solid rgba(247, 200, 115, 0.2);
+    color: #eee;
   }
 
   .box-office-amount {
-    font-weight: bold;
+    font-weight: 600;
     color: #fff;
-    font-size: 18px;
+    font-size: 20px;
+    margin-top: 15px;
   }
 
-  /* Lampes améliorées */
   .lamp {
     position: fixed;
     top: -20px;
     width: 2px;
     height: 2px;
     background: var(--gold);
-    box-shadow: 0 0 100px 50px rgba(247, 200, 115, 0.2);
+    box-shadow: 0 0 120px 60px rgba(247, 200, 115, 0.15);
     z-index: 1;
   }
-  .lamp.left { left: 15%; }
-  .lamp.right { right: 15%; }
+  .lamp.left { left: 10%; }
+  .lamp.right { right: 10%; }
 </style>
 </head>
 
 <body>
   <div class="lamp left"></div>
   <div class="lamp right"></div>
-  <h1>Cinema</h1>
+  <h1>Cinema Royale</h1>
 
   <section id="boxoffice-viz">
     <div class="controls">
+      <div class="search-wrapper">
+        <input type="text" id="search-bar" placeholder="Rechercher un film, un réalisateur, un genre...">
+      </div>
+
       <div class="slider-container">
         <div class="year-display" id="boxoffice-year">2013</div>
         <input type="range" min="2013" max="2023" step="1" value="2013" id="boxoffice-slider">
       </div>
-      <input type="text" id="search-bar" placeholder="Rechercher un film, un réalisateur...">
     </div>
 
     <div class="films-panel" id="boxoffice-films"></div>
@@ -206,7 +242,6 @@
 <script>
   (function () {
     const enrichedData = [
-      /* ... (Gardez vos données enrichedData ici) ... */
       {"year":2013,"rank":1,"title":"Frozen","boxOffice":"1280802282","genre":"Animation","country":"États-Unis","director":"Chris Buck, Jennifer Lee","directorGender":"Homme / Femme","poster":"https://image.tmdb.org/t/p/w500/kgwjIb1CkFCftymFGOtdLlOrWYv.jpg"},
       {"year":2013,"rank":2,"title":"Iron Man 3","boxOffice":"1214811252","genre":"Action / Super-héros","country":"États-Unis","director":"Shane Black","directorGender":"Homme","poster":"https://image.tmdb.org/t/p/w500/qhPtAc1TKbMPqNvcdXSOn9Bn7hZ.jpg"},
       {"year":2013,"rank":3,"title":"Despicable Me 2","boxOffice":"970766005","genre":"Animation","country":"États-Unis","director":"Pierre Coffin, Chris Renaud","directorGender":"Hommes","poster":"https://image.tmdb.org/t/p/w500/5Fh4NdoEnCjCK9wLjdJ9DJNFl2b.jpg"},
@@ -284,7 +319,6 @@
         (d.title.toLowerCase().includes(term) || d.director.toLowerCase().includes(term) || d.genre.toLowerCase().includes(term))
       );
 
-      // Changement de fond dynamique basé sur le film Rank #1 de l'année
       const topFilm = enrichedData.find(d => d.year == year && d.rank == 1);
       if (topFilm) {
         document.body.style.backgroundImage = `url('${topFilm.poster}')`;
@@ -304,21 +338,19 @@
               <span class="tag">🎬 ${film.director}</span>
               <span class="tag">🌍 ${film.country}</span>
             </div>
-            <div style="margin-top:10px" class="box-office-amount">${formatBoxOffice(film.boxOffice)}</div>
+            <div class="box-office-amount">${formatBoxOffice(film.boxOffice)}</div>
           </div>
         `;
         panel.appendChild(filmEl);
       });
       
       if(films.length === 0) {
-        panel.innerHTML = `<div style="text-align:center; padding: 40px; font-style: italic; opacity: 0.7;">Aucun film trouvé pour cette recherche en ${year}.</div>`;
+        panel.innerHTML = `<div style="text-align:center; padding: 60px; font-style: italic; opacity: 0.5; font-size: 18px;">Aucun film ne correspond à votre recherche pour l'année ${year}.</div>`;
       }
     }
 
     slider.addEventListener("input", update);
     searchBar.addEventListener("input", update);
-    
-    // Initialisation
     update();
 
   })();
