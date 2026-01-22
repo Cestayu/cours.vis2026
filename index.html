@@ -1,249 +1,241 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Cinema Dashboard - Champion Edition</title>
-  <link href="https://fonts.googleapis.com/css2?family=Limelight&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <style>
-    body {
-      margin: 0;
-      min-height: 100vh;
-      background: radial-gradient(circle at center, #1a1a1a 0%, #000 80%);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      color: #f5d76e;
-      font-family: 'Segoe UI', Arial, sans-serif;
-      overflow-x: hidden;
-    }
+<meta charset="UTF-8">
+<title>Cinema Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Limelight&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-    h1 {
-      margin-top: 30px;
-      font-family: 'Limelight', cursive;
-      font-size: 70px;
-      color: #f7c873;
-      text-shadow: 0 0 15px rgba(247, 200, 115, 0.5);
-      text-transform: uppercase;
-      letter-spacing: 5px;
-    }
+<style>
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: #000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: #f5d76e;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  overflow-x: hidden;
+}
 
-    /* --- Interactive Flip Card --- */
-    #champion-section {
-      width: 90%;
-      max-width: 800px;
-      margin-bottom: 40px;
-      perspective: 1500px;
-    }
+/* 🎬 Dynamic background */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background-image: var(--bg);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  opacity: 0.15;
+  filter: blur(8px);
+  z-index: -1;
+  transition: background-image 0.6s ease-in-out;
+}
 
-    .flip-card {
-      width: 100%;
-      height: 280px;
-      cursor: pointer;
-    }
+h1 {
+  margin-top: 40px;
+  font-family: 'Limelight', cursive;
+  font-size: 80px;
+  letter-spacing: 8px;
+  text-transform: uppercase;
+  color: #f7c873;
+  text-shadow: 0 0 15px rgba(255,180,80,0.6);
+}
 
-    .flip-card-inner {
-      position: relative;
-      width: 100%;
-      height: 100%;
-      transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-      transform-style: preserve-3d;
-    }
+.search-container {
+  width: 90%;
+  max-width: 1000px;
+  background: rgba(0,0,0,0.65);
+  padding: 20px;
+  border-radius: 15px;
+  display: flex;
+  gap: 15px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-bottom: 20px;
+  border: 1px solid rgba(255,215,120,0.2);
+}
 
-    .flip-card:hover .flip-card-inner {
-      transform: rotateY(180deg);
-    }
+.search-container input,
+.search-container select {
+  padding: 10px;
+  border-radius: 5px;
+  border: 1px solid #f7c873;
+  background: #111;
+  color: #f7c873;
+  outline: none;
+  flex: 1;
+  min-width: 200px;
+}
 
-    .flip-card-front, .flip-card-back {
-      position: absolute;
-      width: 100%;
-      height: 100%;
-      -webkit-backface-visibility: hidden;
-      backface-visibility: hidden;
-      border: 2px solid #f7c873;
-      border-radius: 20px;
-      display: flex;
-      align-items: center;
-      padding: 25px;
-      box-sizing: border-box;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-    }
+#boxoffice-viz, #trends-viz {
+  width: 90%;
+  max-width: 1000px;
+  margin-bottom: 40px;
+  background: rgba(0,0,0,0.75);
+  border: 1px solid rgba(255,215,120,0.3);
+  border-radius: 20px;
+  padding: 30px;
+  backdrop-filter: blur(4px);
+}
 
-    .flip-card-front {
-      background: linear-gradient(145deg, #222, #050505);
-    }
+h2 {
+  text-align: center;
+  font-family: 'Limelight', cursive;
+  color: #f7c873;
+}
 
-    .flip-card-back {
-      transform: rotateY(180deg);
-      background: #f7c873;
-      color: #000;
-      flex-direction: column;
-      justify-content: center;
-      text-align: center;
-    }
+.year-display {
+  font-size: 54px;
+  font-family: 'Limelight';
+  color: #f7c873;
+  text-align: center;
+}
 
-    .champion-poster {
-      width: 160px;
-      height: 230px;
-      border-radius: 10px;
-      background-size: cover;
-      margin-right: 30px;
-      border: 1px solid rgba(255,255,255,0.2);
-    }
+.films-panel {
+  display: grid;
+  gap: 15px;
+}
 
-    /* --- Layout Elements --- */
-    #boxoffice-viz, #trends-viz {
-      width: 90%;
-      max-width: 1000px;
-      background: rgba(0,0,0,0.7);
-      border: 1px solid rgba(247, 200, 115, 0.2);
-      border-radius: 20px;
-      padding: 30px;
-      margin-bottom: 40px;
-    }
+.film {
+  display: flex;
+  align-items: center;
+  padding: 12px;
+  border-radius: 14px;
+  background: rgba(20,20,20,0.85);
+  border: 1px solid rgba(255,215,120,0.2);
+  position: relative;
+}
 
-    .year-display { font-size: 64px; font-family: 'Limelight'; color: #f7c873; }
-    
-    .films-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px; margin-top: 20px; }
+.poster {
+  width: 80px;
+  height: 110px;
+  border-radius: 8px;
+  margin-right: 20px;
+  background-size: cover;
+  background-position: center;
+}
 
-    .film-item {
-      display: flex;
-      align-items: center;
-      padding: 10px;
-      background: rgba(255,255,255,0.05);
-      border-radius: 10px;
-      border-left: 4px solid #f7c873;
-    }
+.film-title {
+  font-size: 20px;
+  font-weight: bold;
+}
 
-    .poster-mini { width: 45px; height: 65px; background-size: cover; border-radius: 4px; margin-right: 15px; }
+.hover-details {
+  position: absolute;
+  right: 10px;
+  background: #000;
+  border: 1px solid #f7c873;
+  padding: 10px;
+  display: none;
+  z-index: 10;
+  border-radius: 8px;
+}
 
-    input[type=range] { width: 100%; accent-color: #f7c873; cursor: pointer; }
-    
-    .gold-label { color: #f7c873; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
-  </style>
+.film:hover .hover-details {
+  display: block;
+}
+</style>
 </head>
+
 <body>
 
-  <h1>Cinema</h1>
+<h1>Cinema</h1>
 
-  <section id="champion-section">
-    <p style="text-align: center;" class="gold-label">🏆 Annual Champion (Hover for Details) 🏆</p>
-    <div id="champ-mount"></div>
-  </section>
+<div class="search-container">
+  <input type="text" id="search-director" placeholder="Filter by Director...">
+  <select id="filter-genre">
+    <option value="All">All Genres</option>
+    <option value="Action">Action</option>
+    <option value="Animation">Animation</option>
+    <option value="Science-fiction">Science-fiction</option>
+    <option value="Fantasy">Fantasy</option>
+  </select>
+</div>
 
-  <section id="boxoffice-viz">
-    <div style="text-align: center;">
-      <div class="year-display" id="year-label">2013</div>
-      <input type="range" min="2013" max="2023" step="1" value="2013" id="year-slider">
-    </div>
-    <div class="films-list" id="films-grid"></div>
-  </section>
+<section id="boxoffice-viz">
+  <h2>Annual Rankings</h2>
+  <div class="year-display" id="boxoffice-year">2013</div>
+  <input type="range" min="2013" max="2023" value="2013" id="boxoffice-slider" style="width:100%">
+  <div class="films-panel" id="boxoffice-films"></div>
+</section>
 
-  <section id="trends-viz">
-    <h2 style="font-family: 'Limelight'; text-align: center;">Revenue Trends ($ Billions)</h2>
-    <canvas id="trendChart"></canvas>
-  </section>
+<section id="trends-viz">
+  <h2>Box Office Trends ($ Billions)</h2>
+  <canvas id="trendChart"></canvas>
+</section>
 
-  <script>
-    const fullData = [
-      {"year":2013,"rank":1,"title":"Frozen","boxOffice":1280802282,"genre":"Animation","director":"Chris Buck, Jennifer Lee","poster":"https://image.tmdb.org/t/p/w500/kgwjIb1CkFCftymFGOtdLlOrWYv.jpg","desc":"A princess sets off on a journey alongside an iceman and his reindeer to find her sister."},
-      {"year":2014,"rank":1,"title":"Transformers: Age of Extinction","boxOffice":1104054072,"genre":"Action","director":"Michael Bay","poster":"https://image.tmdb.org/t/p/w500/jyzrfx2WaeY60kYZpPYepSjGz4S.jpg","desc":"Autobots must escape sight of a bounty hunter who has taken control of the kinetic energy."},
-      {"year":2015,"rank":1,"title":"Star Wars: The Force Awakens","boxOffice":2068223624,"genre":"Sci-Fi","director":"J. J. Abrams","poster":"https://image.tmdb.org/t/p/w500/wqnLdwVXoBjKibFRR5U3y0aDUhs.jpg","desc":"A new threat to the galaxy rises as Rey and Finn join forces with Han Solo and Chewbacca."},
-      {"year":2016,"rank":1,"title":"Captain America: Civil War","boxOffice":1153337496,"genre":"Action","director":"Russo Brothers","poster":"https://image.tmdb.org/t/p/w500/rAGiXaUfPu0D2BJ1JMQzJiD8tFl.jpg","desc":"Political involvement in the Avengers' affairs causes a rift between Captain America and Iron Man."},
-      {"year":2017,"rank":1,"title":"Star Wars: The Last Jedi","boxOffice":1334407706,"genre":"Sci-Fi","director":"Rian Johnson","poster":"https://image.tmdb.org/t/p/w500/kOVEVeg59E0wsnXmF9nrh6OmWII.jpg","desc":"The Resistance prepares for a final stand against the First Order while Rey seeks Luke Skywalker."},
-      {"year":2018,"rank":1,"title":"Avengers: Infinity War","boxOffice":2048359754,"genre":"Action","director":"Russo Brothers","poster":"https://image.tmdb.org/t/p/w500/7WsyChQLEftFiDOVTGkv3hFpyyt.jpg","desc":"The Avengers and their allies must sacrifice all to defeat Thanos before he ruins the universe."},
-      {"year":2019,"rank":1,"title":"Avengers: Endgame","boxOffice":2797501328,"genre":"Action","director":"Russo Brothers","poster":"https://image.tmdb.org/t/p/w500/or06FN3Dka5tukK1e9sl16pB3iy.jpg","desc":"The remaining Avengers take one final stand in Marvel's conclusion to twenty-two films."},
-      {"year":2020,"rank":1,"title":"The Eight Hundred","boxOffice":461421559,"genre":"War","director":"Guan Hu","poster":"https://image.tmdb.org/t/p/w500/pk4GFAALvJhckzPY5h3L1RkfSD6.jpg","desc":"During the War of Resistance, 800 soldiers defend a warehouse against the Japanese army."},
-      {"year":2021,"rank":1,"title":"Spider-Man: No Way Home","boxOffice":1921847111,"genre":"Action","director":"Jon Watts","poster":"https://image.tmdb.org/t/p/w500/1g0dhYtq4irTY1GPXvft6k4YLjm.jpg","desc":"Peter Parker's identity is revealed, leading him to seek help from Doctor Strange."},
-      {"year":2022,"rank":1,"title":"Avatar: The Way of Water","boxOffice":2320250281,"genre":"Sci-Fi","director":"James Cameron","poster":"https://image.tmdb.org/t/p/w500/t6HIqrRAclMCA60NsSmeqe9RmNV.jpg","desc":"Jake Sully and Ney'tiri must protect their family from a familiar threat on Pandora."},
-      {"year":2023,"rank":1,"title":"Barbie","boxOffice":1445638421,"genre":"Comedy","director":"Greta Gerwig","poster":"https://image.tmdb.org/t/p/w500/iuFNMS8U5cb6xfzi51Dbkovj7vM.jpg","desc":"Barbie suffers a crisis and leaves Barbie Land for the Real World to find her purpose."}
-    ];
+<script>
+/* =========================
+   📊 YOUR ORIGINAL DATA
+   ========================= */
+const enrichedData = [
+  {"year":2013,"rank":1,"title":"Frozen","boxOffice":"1280802282","genre":"Animation","country":"États-Unis","director":"Chris Buck, Jennifer Lee","directorGender":"Homme / Femme","poster":"https://image.tmdb.org/t/p/w500/kgwjIb1CkFCftymFGOtdLlOrWYv.jpg"},
+  {"year":2013,"rank":2,"title":"Iron Man 3","boxOffice":"1214811252","genre":"Action","country":"États-Unis","director":"Shane Black","directorGender":"Homme","poster":"https://image.tmdb.org/t/p/w500/qhPtAc1TKbMPqNvcdXSOn9Bn7hZ.jpg"},
+  {"year":2013,"rank":3,"title":"Despicable Me 2","boxOffice":"970766005","genre":"Animation","country":"États-Unis","director":"Pierre Coffin, Chris Renaud","directorGender":"Hommes","poster":"https://image.tmdb.org/t/p/w500/5Fh4NdoEnCjCK9wLjdJ9DJNFl2b.jpg"},
+  {"year":2013,"rank":4,"title":"The Hobbit: The Desolation of Smaug","boxOffice":"958366855","genre":"Fantasy","country":"USA","director":"Peter Jackson","directorGender":"Homme","poster":"https://image.tmdb.org/t/p/w500/xQYiXsmeYkKMq5yvwD0ejl8cWs7.jpg"},
+  {"year":2013,"rank":5,"title":"The Hunger Games: Catching Fire","boxOffice":"865011746","genre":"Science-fiction","country":"USA","director":"Francis Lawrence","directorGender":"Homme","poster":"https://image.tmdb.org/t/p/w500/v9qVkyS58WHdfrcEq0dxUJFKS9n.jpg"},
 
-    // Additional data to fill the grid (Rank 2-3 for variety)
-    const secondaryData = [
-      {"year":2013,"rank":2,"title":"Iron Man 3","boxOffice":1214811252,"genre":"Action","poster":"https://image.tmdb.org/t/p/w500/qhPtAc1TKbMPqNvcdXSOn9Bn7hZ.jpg"},
-      {"year":2015,"rank":2,"title":"Jurassic World","boxOffice":1671537444,"genre":"Sci-Fi","poster":"https://image.tmdb.org/t/p/w500/jIlQHSUc1NnqhbWtkkdIrYLiNl7.jpg"},
-      {"year":2019,"rank":2,"title":"The Lion King","boxOffice":1656943394,"genre":"Animation","poster":"https://image.tmdb.org/t/p/w500/dzBtMocZuJbjLOXvrl4zGYigDzh.jpg"},
-      {"year":2023,"rank":2,"title":"Super Mario Bros.","boxOffice":1361992475,"genre":"Animation","poster":"https://image.tmdb.org/t/p/w500/qNBAXBIQlnOThrVvA6mA2B5ggV6.jpg"}
-    ];
+  {"year":2014,"rank":1,"title":"Transformers: Age of Extinction","boxOffice":"1104054072","genre":"Action","country":"USA","director":"Michael Bay","directorGender":"Homme","poster":"https://image.tmdb.org/t/p/w500/jyzrfx2WaeY60kYZpPYepSjGz4S.jpg"},
+  {"year":2014,"rank":2,"title":"The Hobbit: The Battle of the Five Armies","boxOffice":"962201338","genre":"Fantasy","country":"USA","director":"Peter Jackson","directorGender":"Homme","poster":"https://image.tmdb.org/t/p/w500/9zd9P2J3N7A4hBgx1RGCFgTMBPk.jpg"}
+  /* 👉 keep the rest of your data exactly as you had it */
+];
 
-    const slider = document.getElementById("year-slider");
-    const label = document.getElementById("year-label");
-    const champMount = document.getElementById("champ-mount");
-    const grid = document.getElementById("films-grid");
+/* ========================= */
 
-    function update() {
-      const yr = slider.value;
-      label.textContent = yr;
-      
-      const champ = fullData.find(d => d.year == yr);
-      const list = [...fullData, ...secondaryData].filter(d => d.year == yr).sort((a,b) => a.rank - b.rank);
+const slider = document.getElementById("boxoffice-slider");
+const yearDisplay = document.getElementById("boxoffice-year");
+const panel = document.getElementById("boxoffice-films");
+const sDirector = document.getElementById("search-director");
+const sGenre = document.getElementById("filter-genre");
 
-      // Render 3D Flip Card
-      champMount.innerHTML = `
-        <div class="flip-card">
-          <div class="flip-card-inner">
-            <div class="flip-card-front">
-              <div class="champion-poster" style="background-image:url('${champ.poster}')"></div>
-              <div>
-                <h2 style="font-family:'Limelight'; margin:0;">${champ.title}</h2>
-                <p class="gold-label" style="font-size:1.4em;">$${(champ.boxOffice/1e9).toFixed(2)}B</p>
-                <p>Director: <b>${champ.director}</b></p>
-                <p>Genre: ${champ.genre}</p>
-              </div>
-            </div>
-            <div class="flip-card-back">
-              <h2 style="font-family:'Limelight'">SYNOPSIS</h2>
-              <p style="padding: 0 30px; font-size: 1.1em; line-height: 1.6;">${champ.desc}</p>
-              <div style="margin-top: 20px; font-weight: bold;">Top Year Performance</div>
-            </div>
-          </div>
+function formatBoxOffice(v) {
+  return "$" + (parseInt(v) / 1e9).toFixed(2) + " B";
+}
+
+/* 🎬 Background updater */
+function updateBackground(year) {
+  const topFilm = enrichedData.find(d => d.year == year && d.rank === 1);
+  if (topFilm) {
+    document.body.style.setProperty("--bg", `url('${topFilm.poster}')`);
+  }
+}
+
+function update() {
+  const year = slider.value;
+  yearDisplay.textContent = year;
+  updateBackground(year);
+  panel.innerHTML = "";
+
+  const films = enrichedData.filter(d =>
+    d.year == year &&
+    d.director.toLowerCase().includes(sDirector.value.toLowerCase()) &&
+    (sGenre.value === "All" || d.genre.includes(sGenre.value))
+  );
+
+  films.forEach(film => {
+    panel.innerHTML += `
+      <div class="film">
+        <div class="poster" style="background-image:url('${film.poster}')"></div>
+        <div>
+          <div class="film-title">#${film.rank} ${film.title}</div>
+          <div>${film.genre} | ${film.director}</div>
+          <strong>${formatBoxOffice(film.boxOffice)}</strong>
         </div>
-      `;
+      </div>
+    `;
+  });
+}
 
-      // Render Grid
-      grid.innerHTML = list.map(f => `
-        <div class="film-item">
-          <div class="poster-mini" style="background-image:url('${f.poster}')"></div>
-          <div>
-            <div style="font-weight:bold">#${f.rank} ${f.title}</div>
-            <div style="font-size:0.85em; color:#aaa">$${(f.boxOffice/1e6).toFixed(0)}M Revenue</div>
-          </div>
-        </div>
-      `).join('');
-    }
+[slider, sDirector, sGenre].forEach(el =>
+  el.addEventListener("input", update)
+);
 
-    function initChart() {
-      const ctx = document.getElementById('trendChart').getContext('2d');
-      new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: fullData.map(d => d.year),
-          datasets: [{
-            label: 'Champion Gross ($ Billions)',
-            data: fullData.map(d => d.boxOffice / 1e9),
-            borderColor: '#f7c873',
-            backgroundColor: 'rgba(247, 200, 115, 0.2)',
-            fill: true,
-            tension: 0.4,
-            pointRadius: 6,
-            pointHoverRadius: 10
-          }]
-        },
-        options: {
-          animation: { duration: 2500 },
-          plugins: { legend: { display: false } },
-          scales: {
-            y: { ticks: { color: '#f7c873' }, grid: { color: '#333' } },
-            x: { ticks: { color: '#f7c873' } }
-          }
-        }
-      });
-    }
+update();
+updateBackground(slider.value);
+</script>
 
-    slider.addEventListener("input", update);
-    update();
-    initChart();
-  </script>
 </body>
 </html>
