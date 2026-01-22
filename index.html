@@ -13,52 +13,58 @@
       display: flex; flex-direction: column; align-items: center; padding-bottom: 60px;
     }
 
-    /* Lamps */
+    /* Art Deco Lamps */
     .lamp {
       position: absolute; top: 40px; width: 40px; height: 40px;
       background: radial-gradient(circle, #ffd27d 0%, #ff9f1c 40%, #cc6b00 70%);
       border-radius: 50%; box-shadow: 0 0 30px rgba(255, 160, 60, 0.9); z-index: 1;
     }
-    .lamp.left { left: 5%; } .lamp.right { right: 5%; }
+    .lamp.left { left: 10%; } .lamp.right { right: 10%; }
 
     h1 {
       margin-top: 50px; font-family: 'Limelight', cursive; font-size: clamp(40px, 8vw, 80px);
       text-transform: uppercase; text-shadow: 0 0 15px rgba(247, 200, 115, 0.4);
     }
 
-    /* UI Panels */
     .panel {
       width: 90%; max-width: 1000px; background: rgba(0,0,0,0.7);
       border: 1px solid rgba(247, 200, 115, 0.2); border-radius: 20px;
       padding: 25px; margin-bottom: 30px;
     }
 
-    .research-panel { display: flex; gap: 15px; }
+    /* Filters: No Search by Title */
+    .research-panel { display: flex; gap: 20px; }
     .research-panel select, .research-panel input {
       flex: 1; padding: 12px; background: #000; color: var(--gold);
-      border: 1px solid var(--gold); border-radius: 8px;
+      border: 1px solid var(--gold); border-radius: 8px; font-size: 16px;
     }
 
-    .year-display { font-size: 48px; font-family: 'Limelight'; text-align: center; margin-bottom: 10px; }
-    
-    .films-grid { display: grid; grid-template-columns: 1fr; gap: 10px; }
+    /* Section 1: Top Five */
+    .year-display { font-size: 50px; font-family: 'Limelight'; text-align: center; margin-bottom: 10px; }
+    .films-grid { display: flex; flex-direction: column; gap: 12px; }
     .film-card {
-      display: flex; align-items: center; padding: 10px; background: rgba(255,255,255,0.05);
+      display: flex; align-items: center; padding: 15px; background: rgba(255,255,255,0.05);
       border-radius: 12px; border: 1px solid rgba(247, 200, 115, 0.1);
+      transition: transform 0.2s;
     }
-    .poster-img { width: 60px; height: 90px; border-radius: 5px; margin-right: 15px; object-fit: cover; }
+    .film-card:hover { transform: translateX(10px); background: rgba(255,255,255,0.1); }
+    .poster-img { width: 70px; height: 100px; border-radius: 6px; margin-right: 20px; object-fit: cover; }
 
-    /* Trends Section */
-    .trends-layout { display: grid; grid-template-columns: 1fr 300px; gap: 20px; }
-    @media (max-width: 800px) { .trends-layout { grid-template-columns: 1fr; } }
+    /* Section 2: Trends Evolution */
+    .trends-layout { display: grid; grid-template-columns: 1fr 320px; gap: 30px; margin-top: 20px; }
+    @media (max-width: 850px) { .trends-layout { grid-template-columns: 1fr; } }
     
     .btn-play {
-      background: var(--gold); color: #000; border: none; padding: 12px 24px;
+      background: var(--gold); color: #000; border: none; padding: 14px 28px;
       border-radius: 50px; font-weight: bold; cursor: pointer; display: block; margin: 0 auto 20px;
+      font-size: 16px;
     }
 
     .spotlight-card { text-align: center; border-left: 1px solid rgba(247, 200, 115, 0.2); padding-left: 20px; }
-    .covid-tag { color: #ff4d4d; font-weight: bold; display: none; margin-top: 10px; border: 1px solid #ff4d4d; padding: 5px; }
+    .covid-tag { 
+        color: #ff4d4d; font-weight: bold; display: none; margin-top: 15px; 
+        border: 2px solid #ff4d4d; padding: 10px; border-radius: 5px; background: rgba(255, 77, 77, 0.1);
+    }
   </style>
 </head>
 <body>
@@ -69,140 +75,153 @@
   <h1>Cinema</h1>
 
   <div class="panel research-panel">
-    <select id="genre-select">
-      <option value="All">All Genres</option>
-      <option value="Action">Action</option>
-      <option value="Animation">Animation</option>
-      <option value="Science-fiction">Science-fiction</option>
-      <option value="Fantasy">Fantasy</option>
-    </select>
-    <input type="text" id="director-input" placeholder="Search by Director...">
+    <div style="flex: 1;">
+        <label style="font-size: 12px; display: block; margin-bottom: 5px;">GENRE</label>
+        <select id="genre-select" style="width: 100%;">
+            <option value="All">All Genres</option>
+            <option value="Action">Action</option>
+            <option value="Animation">Animation</option>
+            <option value="Science-fiction">Science-fiction</option>
+            <option value="Fantasy">Fantasy</option>
+        </select>
+    </div>
+    <div style="flex: 1;">
+        <label style="font-size: 12px; display: block; margin-bottom: 5px;">DIRECTOR</label>
+        <input type="text" id="director-input" placeholder="Enter director name..." style="width: 100%;">
+    </div>
   </div>
 
-  <div class="panel">
+  <div class="panel" id="top-five-section">
     <div class="year-display" id="main-year">2013</div>
-    <input type="range" min="2013" max="2023" value="2013" id="year-slider" style="width: 100%; margin-bottom: 20px;">
-    <div class="films-grid" id="top-films-container"></div>
+    <input type="range" min="2013" max="2023" value="2013" id="year-slider" style="width: 100%; margin-bottom: 25px; cursor: pointer;">
+    <div class="films-grid" id="top-films-container">
+        </div>
   </div>
 
   <div class="panel">
-    <h2 style="font-family: 'Limelight'; text-align: center;">Yearly Trends Evolution</h2>
+    <h2 style="font-family: 'Limelight'; text-align: center; letter-spacing: 2px;">YEARLY TRENDS EVOLUTION</h2>
     <button class="btn-play" id="play-trends-btn">▶ Play Evolution</button>
     
     <div class="trends-layout">
-      <canvas id="evolutionChart"></canvas>
+      <div>
+        <canvas id="evolutionChart"></canvas>
+      </div>
       <div class="spotlight-card">
-        <div style="font-size: 12px; opacity: 0.6; margin-bottom: 10px;">YEARLY CHAMPION (<span id="trend-year-label">2013</span>)</div>
-        <img id="trend-poster" style="width: 160px; border-radius: 10px; border: 2px solid var(--gold); box-shadow: 0 10px 20px rgba(0,0,0,0.5);">
-        <div id="trend-title" style="font-weight: bold; font-size: 18px; margin-top: 10px;">Movie Title</div>
-        <div id="covid-alert" class="covid-tag">⚠️ COVID-19 LOWEST PERIOD</div>
+        <div style="font-size: 11px; opacity: 0.6; letter-spacing: 2px; margin-bottom: 10px;">YEAR CHAMPION: <span id="trend-year-label" style="color:var(--gold)">2013</span></div>
+        <img id="trend-poster" src="" style="width: 180px; border-radius: 12px; border: 2px solid var(--gold); box-shadow: 0 15px 30px rgba(0,0,0,0.6);">
+        <div id="trend-title" style="font-weight: bold; font-size: 20px; margin-top: 15px; font-family: 'Limelight';">Movie Title</div>
+        <div id="covid-alert" class="covid-tag">⚠️ COVID-19 PERIOD<br><small>LOWEST VIEWERSHIP</small></div>
       </div>
     </div>
   </div>
 
   <script>
-    // DATASET (Top 1 only for animation efficiency)
-    const data = [
-      {year: 2013, title: "Frozen", poster: "https://image.tmdb.org/t/p/w500/kgwjIb1CkFCftymFGOtdLlOrWYv.jpg", boxOffice: 1280, rank: 1, genre: "Animation", director: "Chris Buck"},
-      {year: 2014, title: "Transformers", poster: "https://image.tmdb.org/t/p/w500/jyzrfx2WaeY60kYZpPYepSjGz4S.jpg", boxOffice: 1104, rank: 1, genre: "Action", director: "Michael Bay"},
-      {year: 2015, title: "Star Wars: VII", poster: "https://image.tmdb.org/t/p/w500/wqnLdwVXoBjKibFRR5U3y0aDUhs.jpg", boxOffice: 2068, rank: 1, genre: "Science-fiction", director: "J.J. Abrams"},
-      {year: 2016, title: "Captain America", poster: "https://image.tmdb.org/t/p/w500/rAGiXaUfPu0D2BJ1JMQzJiD8tFl.jpg", boxOffice: 1153, rank: 1, genre: "Action", director: "Anthony Russo"},
-      {year: 2017, title: "Star Wars: VIII", poster: "https://image.tmdb.org/t/p/w500/kOVEVeg59E0wsnXmF9nrh6OmWII.jpg", boxOffice: 1334, rank: 1, genre: "Science-fiction", director: "Rian Johnson"},
-      {year: 2018, title: "Avengers: Infinity War", poster: "https://image.tmdb.org/t/p/w500/7WsyChQLEftFiDOVTGkv3hFpyyt.jpg", boxOffice: 2048, rank: 1, genre: "Action", director: "Joe Russo"},
-      {year: 2019, title: "Avengers: Endgame", poster: "https://image.tmdb.org/t/p/w500/or06FN3Dka5tukK1e9sl16pB3iy.jpg", boxOffice: 2797, rank: 1, genre: "Action", director: "Joe Russo"},
-      {year: 2020, title: "The Eight Hundred", poster: "https://image.tmdb.org/t/p/w500/pk4GFAALvJhckzPY5h3L1RkfSD6.jpg", boxOffice: 461, rank: 1, genre: "War", director: "Guan Hu"},
-      {year: 2021, title: "Spider-Man: No Way Home", poster: "https://image.tmdb.org/t/p/w500/1g0dhYtq4irTY1GPXvft6k4YLjm.jpg", boxOffice: 1921, rank: 1, genre: "Action", director: "Jon Watts"},
-      {year: 2022, title: "Avatar: Way of Water", poster: "https://image.tmdb.org/t/p/w500/t6HIqrRAclMCA60NsSmeqe9RmNV.jpg", boxOffice: 2320, rank: 1, genre: "Science-fiction", director: "James Cameron"},
-      {year: 2023, title: "Barbie", poster: "https://image.tmdb.org/t/p/w500/iuFNMS8U5cb6xfzi51Dbkovj7vM.jpg", boxOffice: 1445, rank: 1, genre: "Fantasy", director: "Greta Gerwig"}
+    // Data containing the #1 Rank for each year to drive the Evolution section
+    const trendData = [
+      {year: 2013, title: "Frozen", poster: "https://image.tmdb.org/t/p/w500/kgwjIb1CkFCftymFGOtdLlOrWYv.jpg", boxOffice: 1280, genre: "Animation", director: "Chris Buck"},
+      {year: 2014, title: "Transformers: Extinction", poster: "https://image.tmdb.org/t/p/w500/jyzrfx2WaeY60kYZpPYepSjGz4S.jpg", boxOffice: 1104, genre: "Action", director: "Michael Bay"},
+      {year: 2015, title: "Star Wars: Force Awakens", poster: "https://image.tmdb.org/t/p/w500/wqnLdwVXoBjKibFRR5U3y0aDUhs.jpg", boxOffice: 2068, genre: "Science-fiction", director: "J.J. Abrams"},
+      {year: 2016, title: "Captain America: Civil War", poster: "https://image.tmdb.org/t/p/w500/rAGiXaUfPu0D2BJ1JMQzJiD8tFl.jpg", boxOffice: 1153, genre: "Action", director: "Anthony Russo"},
+      {year: 2017, title: "Star Wars: Last Jedi", poster: "https://image.tmdb.org/t/p/w500/kOVEVeg59E0wsnXmF9nrh6OmWII.jpg", boxOffice: 1334, genre: "Science-fiction", director: "Rian Johnson"},
+      {year: 2018, title: "Avengers: Infinity War", poster: "https://image.tmdb.org/t/p/w500/7WsyChQLEftFiDOVTGkv3hFpyyt.jpg", boxOffice: 2048, genre: "Action", director: "Joe Russo"},
+      {year: 2019, title: "Avengers: Endgame", poster: "https://image.tmdb.org/t/p/w500/or06FN3Dka5tukK1e9sl16pB3iy.jpg", boxOffice: 2797, genre: "Action", director: "Joe Russo"},
+      {year: 2020, title: "The Eight Hundred", poster: "https://image.tmdb.org/t/p/w500/pk4GFAALvJhckzPY5h3L1RkfSD6.jpg", boxOffice: 461, genre: "War", director: "Guan Hu"},
+      {year: 2021, title: "Spider-Man: No Way Home", poster: "https://image.tmdb.org/t/p/w500/1g0dhYtq4irTY1GPXvft6k4YLjm.jpg", boxOffice: 1921, genre: "Action", director: "Jon Watts"},
+      {year: 2022, title: "Avatar: Way of Water", poster: "https://image.tmdb.org/t/p/w500/t6HIqrRAclMCA60NsSmeqe9RmNV.jpg", boxOffice: 2320, genre: "Science-fiction", director: "James Cameron"},
+      {year: 2023, title: "Barbie", poster: "https://image.tmdb.org/t/p/w500/iuFNMS8U5cb6xfzi51Dbkovj7vM.jpg", boxOffice: 1445, genre: "Fantasy", director: "Greta Gerwig"}
     ];
 
     let chart;
     let trendYear = 2013;
     let trendTimer = null;
 
-    // 1. UPDATE STATIC TOP SECTION
-    function updateTopSection() {
+    // 1. UPDATE TOP FIVE (MANUAL)
+    function updateTopFive() {
       const year = document.getElementById('year-slider').value;
       const genre = document.getElementById('genre-select').value;
-      const director = document.getElementById('director-input').value.toLowerCase();
+      const directorSearch = document.getElementById('director-input').value.toLowerCase();
       
       document.getElementById('main-year').innerText = year;
       const container = document.getElementById('top-films-container');
       container.innerHTML = "";
 
-      // Filtering logic
-      const filtered = data.filter(f => 
+      // Logic: In a real app, this would filter from a larger 50-item list. 
+      // For this demo, we display the Top 1 item as the example card.
+      const filtered = trendData.filter(f => 
         f.year == year && 
         (genre === "All" || f.genre.includes(genre)) &&
-        f.director.toLowerCase().includes(director)
+        f.director.toLowerCase().includes(directorSearch)
       );
 
-      filtered.forEach(f => {
+      filtered.forEach((f, index) => {
         container.innerHTML += `
           <div class="film-card">
             <img src="${f.poster}" class="poster-img">
             <div>
-              <div style="font-weight:bold; font-size:18px;">#${f.rank} ${f.title}</div>
-              <div style="font-size:12px; opacity:0.7;">${f.genre} | Dir: ${f.director}</div>
-              <div style="color:var(--gold); margin-top:4px;">$${f.boxOffice}M</div>
+              <div style="font-weight:bold; font-size:20px; color:var(--gold);">#1 ${f.title}</div>
+              <div style="font-size:14px; opacity:0.8;">Genre: ${f.genre} | Director: ${f.director}</div>
+              <div style="margin-top:5px; font-weight:bold;">$${f.boxOffice} Million</div>
             </div>
           </div>
         `;
       });
     }
 
-    // 2. UPDATE ANIMATED TRENDS SECTION
+    // 2. UPDATE TREND SECTION (ANIMATED)
     function updateTrendSection(yr) {
       document.getElementById('trend-year-label').innerText = yr;
-      const movie = data.find(m => m.year == yr);
+      const movie = trendData.find(m => m.year == yr);
       
       if(movie) {
         document.getElementById('trend-poster').src = movie.poster;
         document.getElementById('trend-title').innerText = movie.title;
       }
       
+      // COVID Warning for 2020
       document.getElementById('covid-alert').style.display = (yr == 2020) ? "block" : "none";
 
-      // Sync chart highlight
+      // Highlight point in Chart
       const idx = yr - 2013;
       chart.setActiveElements([{datasetIndex: 0, index: idx}]);
       chart.tooltip.setActiveElements([{datasetIndex: 0, index: idx}], {x:0, y:0});
       chart.update();
     }
 
-    // 3. CHART INITIALIZATION
+    // 3. CHART INIT
     function initChart() {
       const ctx = document.getElementById('evolutionChart').getContext('2d');
       chart = new Chart(ctx, {
         type: 'line',
         data: {
-          labels: data.map(d => d.year),
+          labels: trendData.map(d => d.year),
           datasets: [{
-            label: 'Box Office ($M)',
-            data: data.map(d => d.boxOffice),
+            data: trendData.map(d => d.boxOffice),
             borderColor: '#f7c873',
             backgroundColor: 'rgba(247, 200, 115, 0.1)',
             fill: true,
             tension: 0.4,
-            pointRadius: 5,
-            pointHoverRadius: 10
+            pointRadius: 6,
+            pointHoverRadius: 12
           }]
         },
         options: {
           responsive: true,
           plugins: { legend: { display: false } },
           scales: {
-            y: { ticks: { color: '#f7c873' }, grid: { color: 'rgba(255,255,255,0.1)' } },
+            y: { 
+                ticks: { color: '#f7c873', callback: (val) => '$' + val + 'M' }, 
+                grid: { color: 'rgba(255,255,255,0.05)' } 
+            },
             x: { ticks: { color: '#f7c873' }, grid: { display: false } }
           }
         }
       });
     }
 
-    // 4. EVENT LISTENERS
-    document.getElementById('year-slider').oninput = updateTopSection;
-    document.getElementById('genre-select').onchange = updateTopSection;
-    document.getElementById('director-input').oninput = updateTopSection;
+    // 4. CONTROL HANDLERS
+    document.getElementById('year-slider').oninput = updateTopFive;
+    document.getElementById('genre-select').onchange = updateTopFive;
+    document.getElementById('director-input').oninput = updateTopFive;
 
     document.getElementById('play-trends-btn').onclick = function() {
       if(trendTimer) {
@@ -214,14 +233,13 @@
         trendTimer = setInterval(() => {
           trendYear = (trendYear >= 2023) ? 2013 : trendYear + 1;
           updateTrendSection(trendYear);
-        }, 1200);
+        }, 1300);
       }
     };
 
-    // START
     window.onload = () => {
       initChart();
-      updateTopSection();
+      updateTopFive();
       updateTrendSection(2013);
     };
   </script>
