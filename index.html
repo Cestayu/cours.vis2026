@@ -3,143 +3,160 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Box Office Explorer | 2013-2023</title>
+<title>Cinema Box Office Master | 2013-2023</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
     :root {
         --bg: #ffffff;
-        --text-primary: #111827;
-        --text-secondary: #6b7280;
-        --border: #e5e7eb;
-        --accent: #2563eb;
-        /* Genre Colors */
-        --color-action: #ef4444;    --color-animation: #f59e0b;
-        --color-fantasy: #8b5cf6;   --color-scifi: #10b981;
-        --color-comedy: #ec4899;    --color-adventure: #06b6d4;
-        --color-drama: #6366f1;     --color-war: #4b5563;
+        --text-main: #0f172a;
+        --text-muted: #64748b;
+        --border: #f1f5f9;
+        --accent: #0284c7;
+        /* Strategic Genre Colors */
+        --c-action: #f43f5e;    --c-animation: #f59e0b;
+        --c-fantasy: #a855f7;   --c-scifi: #10b981;
+        --c-comedy: #ec4899;    --c-adventure: #0ea5e9;
+        --c-drama: #6366f1;     --c-war: #475569;
     }
 
     * { margin:0; padding:0; box-sizing:border-box; font-family: 'Inter', sans-serif; }
-    body { background: var(--bg); color: var(--text-primary); padding: 40px 20px; transition: all 0.3s; }
+    body { background: var(--bg); color: var(--text-main); line-height: 1.5; padding: 0 20px; }
     
-    .container { max-width: 1200px; margin: 0 auto; }
+    .app-wrapper { max-width: 1300px; margin: 0 auto; padding: 40px 0; }
     
-    /* Header & Lang Switch */
-    header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 60px; }
-    h1 { font-size: 2.5rem; font-weight: 700; letter-spacing: -0.05em; }
-    .lang-toggle { cursor: pointer; padding: 8px 16px; border: 1px solid var(--border); border-radius: 99px; font-weight: 600; font-size: 0.8rem; background: white; transition: 0.2s; }
-    .lang-toggle:hover { background: #f9fafb; }
-
-    /* Navigation */
-    nav { display: flex; gap: 30px; border-bottom: 1px solid var(--border); margin-bottom: 40px; overflow-x: auto; }
-    .nav-item { padding: 12px 4px; cursor: pointer; color: var(--text-secondary); font-weight: 500; border-bottom: 2px solid transparent; transition: 0.2s; white-space: nowrap; }
-    .nav-item.active { color: var(--accent); border-bottom-color: var(--accent); }
-
-    /* Visualizations */
-    .viz-container { min-height: 500px; position: relative; }
-    .tooltip { position: absolute; background: white; border: 1px solid var(--border); padding: 12px; border-radius: 8px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); opacity: 0; pointer-events: none; z-index: 100; font-size: 0.85rem; }
+    /* Header & Controls */
+    header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 50px; border-bottom: 1px solid var(--border); padding-bottom: 30px; }
+    .brand h1 { font-size: 2.2rem; font-weight: 800; letter-spacing: -0.04em; color: var(--text-main); }
+    .brand p { color: var(--text-muted); font-size: 0.95rem; }
     
-    /* Movie Gallery */
-    .gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 30px; }
-    .movie-card { border-radius: 12px; overflow: hidden; transition: transform 0.3s ease; cursor: pointer; }
-    .movie-card:hover { transform: translateY(-8px); }
-    .poster-wrap { position: relative; aspect-ratio: 2/3; background: #f3f4f6; border-radius: 12px; overflow: hidden; }
-    .poster-wrap img { width: 100%; height: 100%; object-fit: cover; }
-    .movie-info { padding: 12px 0; }
-    .m-title { font-weight: 700; font-size: 0.95rem; margin-bottom: 4px; }
-    .m-meta { font-size: 0.8rem; color: var(--text-secondary); }
+    .controls { display: flex; gap: 12px; }
+    .btn-toggle { 
+        padding: 8px 16px; border-radius: 8px; border: 1px solid #e2e8f0; background: white;
+        font-weight: 600; font-size: 0.8rem; cursor: pointer; transition: 0.2s;
+    }
+    .btn-toggle:hover { background: #f8fafc; border-color: #cbd5e1; }
 
-    .genre-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
+    /* Navigation Menu */
+    nav { display: flex; gap: 40px; margin-bottom: 40px; overflow-x: auto; scrollbar-width: none; }
+    .nav-link { 
+        padding: 10px 0; cursor: pointer; color: var(--text-muted); font-weight: 500; 
+        position: relative; transition: 0.3s; white-space: nowrap; font-size: 0.95rem;
+    }
+    .nav-link.active { color: var(--accent); font-weight: 700; }
+    .nav-link.active::after { content: ""; position: absolute; bottom: 0; left: 0; width: 100%; height: 2px; background: var(--accent); }
 
-    @media (max-width: 768px) {
+    /* Visualization Area */
+    #stage { min-height: 600px; position: relative; }
+    
+    /* Tooltip */
+    .viz-tip { 
+        position: absolute; pointer-events: none; opacity: 0; background: rgba(15, 23, 42, 0.95); 
+        color: white; padding: 12px 16px; border-radius: 12px; font-size: 0.85rem; z-index: 1000;
+        backdrop-filter: blur(4px); box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2);
+    }
+
+    /* Movie Gallery Grid */
+    .movie-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 35px; }
+    .movie-card { transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+    .movie-card:hover { transform: translateY(-10px); }
+    .poster-container { 
+        position: relative; border-radius: 16px; overflow: hidden; aspect-ratio: 2/3; 
+        box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05); background: #f1f5f9;
+    }
+    .poster-container img { width: 100%; height: 100%; object-fit: cover; }
+    .rank-badge { 
+        position: absolute; top: 12px; right: 12px; background: white; color: black; 
+        width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; 
+        justify-content: center; font-weight: 800; font-size: 0.75rem;
+    }
+    .card-meta { padding: 15px 5px; }
+    .card-meta h4 { font-size: 1rem; font-weight: 700; margin-bottom: 4px; color: var(--text-main); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .card-meta p { font-size: 0.85rem; color: var(--text-muted); }
+
+    /* D3 Styling */
+    .domain { display: none; }
+    .tick line { stroke: #f1f5f9; }
+    .tick text { fill: #94a3b8; font-size: 11px; }
+
+    @media (max-width: 640px) {
         header { flex-direction: column; align-items: flex-start; gap: 20px; }
-        h1 { font-size: 1.8rem; }
+        .movie-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 20px; }
     }
 </style>
 </head>
 <body>
 
-<div class="container">
+<div class="app-wrapper">
     <header>
-        <div>
-            <h1 id="mainTitle">Box Office Explorer</h1>
-            <p id="subTitle" style="color: var(--text-secondary)">Global Top 5 Movies (2013—2023)</p>
+        <div class="brand">
+            <h1 id="txt-title">Cinema Box Office</h1>
+            <p id="txt-subtitle">Data analysis of the top 55 blockbusters (2013—2023)</p>
         </div>
-        <button class="lang-toggle" onclick="toggleLang()">FR / EN</button>
+        <div class="controls">
+            <button class="btn-toggle" onclick="toggleLanguage()">EN / FR</button>
+        </div>
     </header>
 
-    <nav id="navbar">
-        <div class="nav-item active" onclick="showViz('overview', event)" data-key="nav_overview">Overview</div>
-        <div class="nav-item" onclick="showViz('genres', event)" data-key="nav_genres">Genres</div>
-        <div class="nav-item" onclick="showViz('directors', event)" data-key="nav_directors">Top Directors</div>
-        <div class="nav-item" onclick="showViz('timeline', event)" data-key="nav_timeline">Timeline</div>
-        <div class="nav-item" onclick="showViz('gallery', event)" data-key="nav_gallery">Gallery</div>
+    <nav id="mainNav">
+        <div class="nav-link active" onclick="updateView('overview', event)" data-key="nav_ov">Overview</div>
+        <div class="nav-link" onclick="updateView('genres', event)" data-key="nav_gr">Genre Analysis</div>
+        <div class="nav-link" onclick="updateView('directors', event)" data-key="nav_dr">Top Directors</div>
+        <div class="nav-link" onclick="updateView('timeline', event)" data-key="nav_tl">Timeline</div>
+        <div class="nav-link" onclick="updateView('gallery', event)" data-key="nav_gy">Movie Gallery</div>
     </nav>
 
-    <div id="viz" class="viz-container"></div>
+    <div id="stage"></div>
 </div>
 
-<div id="tooltip" class="tooltip"></div>
+<div id="tooltip" class="viz-tip"></div>
 
 <script>
-const data = [{"year": 2013, "rank": 1, "title": "Frozen", "boxOffice": 1280.8, "genre": "Animation", "director": "Chris Buck, Jennifer Lee", "poster": "https://image.tmdb.org/t/p/w500/kgwjIbS69p968L7VvK5MoY7960G.jpg"}, {"year": 2013, "rank": 2, "title": "Iron Man 3", "boxOffice": 1214.8, "genre": "Action", "director": "Shane Black", "poster": "https://image.tmdb.org/t/p/w500/qhPtRUW9H7TMz0r6T6IKTV99D5p.jpg"}, {"year": 2013, "rank": 3, "title": "Despicable Me 2", "boxOffice": 970.8, "genre": "Animation", "director": "Pierre Coffin, Chris Renaud", "poster": "https://image.tmdb.org/t/p/w500/5S09h7YmB9pSAti6Y8062V18KkK.jpg"}, {"year": 2013, "rank": 4, "title": "The Hobbit: The Desolation of Smaug", "boxOffice": 958.4, "genre": "Fantasy", "director": "Peter Jackson", "poster": "https://image.tmdb.org/t/p/w500/vE9C8HIn8yGTM8H9WpE88X9Bv3k.jpg"}, {"year": 2013, "rank": 5, "title": "The Hunger Games: Catching Fire", "boxOffice": 865.0, "genre": "Science Fiction", "director": "Francis Lawrence", "poster": "https://image.tmdb.org/t/p/w500/v067N9pC5p7fR6H3R8Xk9v9m6P3.jpg"}, {"year": 2014, "rank": 1, "title": "Transformers: Age of Extinction", "boxOffice": 1104.1, "genre": "Action", "director": "Michael Bay", "poster": "https://image.tmdb.org/t/p/w500/77S99Xp88P4nS6394P6n4N69p63.jpg"}, {"year": 2014, "rank": 2, "title": "The Hobbit: The Battle of the Five Armies", "boxOffice": 962.2, "genre": "Fantasy", "director": "Peter Jackson", "poster": "https://image.tmdb.org/t/p/w500/x7S6XmInZ669rS97v9C867vYovR.jpg"}, {"year": 2014, "rank": 3, "title": "Guardians of the Galaxy", "boxOffice": 773.4, "genre": "Action", "director": "James Gunn", "poster": "https://image.tmdb.org/t/p/w500/r7DuyYJszVI0XYBRuL7QpXjG1N5.jpg"}, {"year": 2014, "rank": 4, "title": "Maleficent", "boxOffice": 758.5, "genre": "Fantasy", "director": "Robert Stromberg", "poster": "https://image.tmdb.org/t/p/w500/ik89Go3S6M3p9T6f0sz2Yf08GBy.jpg"}, {"year": 2014, "rank": 5, "title": "The Hunger Games: Mockingjay \u2013 Part 1", "boxOffice": 755.4, "genre": "Science Fiction", "director": "Francis Lawrence", "poster": "https://image.tmdb.org/t/p/w500/gj2H2icB6YFp88o36vPbZ6E94rb.jpg"}, {"year": 2015, "rank": 1, "title": "Star Wars: The Force Awakens", "boxOffice": 2068.2, "genre": "Science Fiction", "director": "J. J. Abrams", "poster": "https://image.tmdb.org/t/p/w500/wqn6ibpSFFXxFWLgH0aR3J9tdnk.jpg"}, {"year": 2015, "rank": 2, "title": "Jurassic World", "boxOffice": 1671.5, "genre": "Science Fiction", "director": "Colin Trevorrow", "poster": "https://image.tmdb.org/t/p/w500/r7DuyYJszVI0XYBRuL7QpXjG1N5.jpg"}, {"year": 2015, "rank": 3, "title": "Furious 7", "boxOffice": 1515.3, "genre": "Action", "director": "James Wan", "poster": "https://image.tmdb.org/t/p/w500/vE9C8HIn8yGTM8H9WpE88X9Bv3k.jpg"}, {"year": 2015, "rank": 4, "title": "Avengers: Age of Ultron", "boxOffice": 1402.8, "genre": "Action", "director": "Joss Whedon", "poster": "https://image.tmdb.org/t/p/w500/t90Y3GZIGuM9vUu8S99616Xk6S.jpg"}, {"year": 2015, "rank": 5, "title": "Minions", "boxOffice": 1159.4, "genre": "Animation", "director": "Pierre Coffin, Kyle Balda", "poster": "https://image.tmdb.org/t/p/w500/q0Rmk7mS74g9R909R96464646.jpg"}, {"year": 2016, "rank": 1, "title": "Captain America: Civil War", "boxOffice": 1153.3, "genre": "Action", "director": "Anthony & Joe Russo", "poster": "https://image.tmdb.org/t/p/w500/k0R0R0R0R0R0R0R0R0R0R0R.jpg"}, {"year": 2016, "rank": 2, "title": "Rogue One: A Star Wars Story", "boxOffice": 1056.1, "genre": "Science Fiction", "director": "Gareth Edwards", "poster": "https://image.tmdb.org/t/p/w500/5jX9pSAti6Y8062V18KkK.jpg"}, {"year": 2016, "rank": 3, "title": "Finding Dory", "boxOffice": 1028.6, "genre": "Animation", "director": "Andrew Stanton", "poster": "https://image.tmdb.org/t/p/w500/369p6363.jpg"}, {"year": 2016, "rank": 4, "title": "Zootopia", "boxOffice": 1025.5, "genre": "Animation", "director": "Byron Howard, Rich Moore", "poster": "https://image.tmdb.org/t/p/w500/hlK0R0R.jpg"}, {"year": 2016, "rank": 5, "title": "The Jungle Book", "boxOffice": 967.7, "genre": "Fantasy", "director": "Jon Favreau", "poster": "https://image.tmdb.org/t/p/w500/j0R0R.jpg"}, {"year": 2017, "rank": 1, "title": "Star Wars: The Last Jedi", "boxOffice": 1334.4, "genre": "Science Fiction", "director": "Rian Johnson", "poster": "https://image.tmdb.org/t/p/w500/kps99.jpg"}, {"year": 2017, "rank": 2, "title": "Beauty and the Beast", "boxOffice": 1266.1, "genre": "Fantasy", "director": "Bill Condon", "poster": "https://image.tmdb.org/t/p/w500/h63.jpg"}, {"year": 2017, "rank": 3, "title": "The Fate of the Furious", "boxOffice": 1236.0, "genre": "Action", "director": "F. Gary Gray", "poster": "https://image.tmdb.org/t/p/w500/f63.jpg"}, {"year": 2017, "rank": 4, "title": "Despicable Me 3", "boxOffice": 1034.8, "genre": "Animation", "director": "Kyle Balda", "poster": "https://image.tmdb.org/t/p/w500/d63.jpg"}, {"year": 2017, "rank": 5, "title": "Jumanji: Welcome to the Jungle", "boxOffice": 962.1, "genre": "Adventure", "director": "Jake Kasdan", "poster": "https://image.tmdb.org/t/p/w500/j63.jpg"}, {"year": 2018, "rank": 1, "title": "Avengers: Infinity War", "boxOffice": 2048.4, "genre": "Action", "director": "Anthony & Joe Russo", "poster": "https://image.tmdb.org/t/p/w500/7WsyChvRStvT0SIp2onGhfw6sIB.jpg"}, {"year": 2018, "rank": 2, "title": "Black Panther", "boxOffice": 1347.6, "genre": "Action", "director": "Ryan Coogler", "poster": "https://image.tmdb.org/t/p/w500/uxzz9.jpg"}, {"year": 2018, "rank": 3, "title": "Jurassic World: Fallen Kingdom", "boxOffice": 1308.5, "genre": "Science Fiction", "director": "J. A. Bayona", "poster": "https://image.tmdb.org/t/p/w500/j63.jpg"}, {"year": 2018, "rank": 4, "title": "Incredibles 2", "boxOffice": 1242.8, "genre": "Animation", "director": "Brad Bird", "poster": "https://image.tmdb.org/t/p/w500/i63.jpg"}, {"year": 2018, "rank": 5, "title": "Aquaman", "boxOffice": 1148.5, "genre": "Action", "director": "James Wan", "poster": "https://image.tmdb.org/t/p/w500/a63.jpg"}, {"year": 2019, "rank": 1, "title": "Avengers: Endgame", "boxOffice": 2797.5, "genre": "Action", "director": "Anthony & Joe Russo", "poster": "https://image.tmdb.org/t/p/w500/or06PztCDmG66sCNywufH6PjXZ3.jpg"}, {"year": 2019, "rank": 2, "title": "The Lion King", "boxOffice": 1656.9, "genre": "Animation", "director": "Jon Favreau", "poster": "https://image.tmdb.org/t/p/w500/dz9.jpg"}, {"year": 2019, "rank": 3, "title": "Frozen II", "boxOffice": 1450.0, "genre": "Animation", "director": "Chris Buck, Jennifer Lee", "poster": "https://image.tmdb.org/t/p/w500/pje.jpg"}, {"year": 2019, "rank": 4, "title": "Spider-Man: Far From Home", "boxOffice": 1131.9, "genre": "Action", "director": "Jon Watts", "poster": "https://image.tmdb.org/t/p/w500/4.jpg"}, {"year": 2019, "rank": 5, "title": "Captain Marvel", "boxOffice": 1128.5, "genre": "Action", "director": "Anna Boden, Ryan Fleck", "poster": "https://image.tmdb.org/t/p/w500/c.jpg"}, {"year": 2020, "rank": 1, "title": "The Eight Hundred", "boxOffice": 461.4, "genre": "War", "director": "Guan Hu", "poster": "https://image.tmdb.org/t/p/w500/h7YvWn7L7CqG9hMv7Q6Wk9hMv7Q.jpg"}, {"year": 2020, "rank": 2, "title": "Bad Boys for Life", "boxOffice": 426.5, "genre": "Action", "director": "Adil El Arbi, Bilall Fallah", "poster": "https://image.tmdb.org/t/p/w500/y95vBYquzArOTj9bRwxbduy7RZs.jpg"}, {"year": 2020, "rank": 3, "title": "My People, My Homeland", "boxOffice": 422.4, "genre": "Comedy", "director": "Collectif", "poster": "https://image.tmdb.org/t/p/w500/eW30Hq0E9r18i4sW5rL5E8e3B7v.jpg"}, {"year": 2020, "rank": 4, "title": "Tenet", "boxOffice": 365.3, "genre": "Science Fiction", "director": "Christopher Nolan", "poster": "https://image.tmdb.org/t/p/w500/a63.jpg"}, {"year": 2020, "rank": 5, "title": "Sonic the Hedgehog", "boxOffice": 319.7, "genre": "Adventure", "director": "Jeff Fowler", "poster": "https://image.tmdb.org/t/p/w500/s63.jpg"}, {"year": 2021, "rank": 1, "title": "Spider-Man: No Way Home", "boxOffice": 1921.8, "genre": "Action", "director": "Jon Watts", "poster": "https://image.tmdb.org/t/p/w500/1g0dhYmWy6k9JSvfyUJp7oRMn3p.jpg"}, {"year": 2021, "rank": 2, "title": "The Battle at Lake Changjin", "boxOffice": 902.5, "genre": "War", "director": "Chen Kaige", "poster": "https://image.tmdb.org/t/p/w500/pAInP8M5TfV0WjK5S70Xp6x6YmX.jpg"}, {"year": 2021, "rank": 3, "title": "Hi, Mom", "boxOffice": 841.7, "genre": "Comedy", "director": "Jia Ling", "poster": "https://image.tmdb.org/t/p/w500/mH9E63mX866rG9X3A67vX9zYm6P.jpg"}, {"year": 2021, "rank": 4, "title": "No Time to Die", "boxOffice": 774.2, "genre": "Action", "director": "Cary Joji Fukunaga", "poster": "https://image.tmdb.org/t/p/w500/n.jpg"}, {"year": 2021, "rank": 5, "title": "F9", "boxOffice": 726.2, "genre": "Action", "director": "Justin Lin", "poster": "https://image.tmdb.org/t/p/w500/f.jpg"}, {"year": 2022, "rank": 1, "title": "Avatar: The Way of Water", "boxOffice": 2320.3, "genre": "Science Fiction", "director": "James Cameron", "poster": "https://image.tmdb.org/t/p/w500/t6Sna48mS8082Yf4ZfO9uN76M11.jpg"}, {"year": 2022, "rank": 2, "title": "Top Gun: Maverick", "boxOffice": 1495.7, "genre": "Action", "director": "Joseph Kosinski", "poster": "https://image.tmdb.org/t/p/w500/t.jpg"}, {"year": 2022, "rank": 3, "title": "Jurassic World Dominion", "boxOffice": 1002.0, "genre": "Science Fiction", "director": "Colin Trevorrow", "poster": "https://image.tmdb.org/t/p/w500/j.jpg"}, {"year": 2022, "rank": 4, "title": "Doctor Strange in the Multiverse of Madness", "boxOffice": 955.8, "genre": "Action", "director": "Sam Raimi", "poster": "https://image.tmdb.org/t/p/w500/d.jpg"}, {"year": 2022, "rank": 5, "title": "Minions: The Rise of Gru", "boxOffice": 940.2, "genre": "Animation", "director": "Kyle Balda", "poster": "https://image.tmdb.org/t/p/w500/m.jpg"}, {"year": 2023, "rank": 1, "title": "Barbie", "boxOffice": 1445.6, "genre": "Comedy", "director": "Greta Gerwig", "poster": "https://image.tmdb.org/t/p/w500/iuFNmBTD0X4EXI0V9vIpxQ69vMG.jpg"}, {"year": 2023, "rank": 2, "title": "The Super Mario Bros. Movie", "boxOffice": 1362.0, "genre": "Animation", "director": "Aaron Horvath, Michael Jelenic", "poster": "https://image.tmdb.org/t/p/w500/qNBAXBIQlnOThrVvA6mA2B5ggV6.jpg"}, {"year": 2023, "rank": 3, "title": "Oppenheimer", "boxOffice": 975.4, "genre": "Drama", "director": "Christopher Nolan", "poster": "https://image.tmdb.org/t/p/w500/8Gxv2mYmUpeZekv0YpS66YnSOTl.jpg"}, {"year": 2023, "rank": 4, "title": "Guardians of the Galaxy Vol. 3", "boxOffice": 845.6, "genre": "Action", "director": "James Gunn", "poster": "https://image.tmdb.org/t/p/w500/g.jpg"}, {"year": 2023, "rank": 5, "title": "Fast X", "boxOffice": 704.9, "genre": "Action", "director": "Louis Leterrier", "poster": "https://image.tmdb.org/t/p/w500/fiVW0qBtLZ7zSnyYm4YvYpPa9v9.jpg"}];
+// Verified Dataset with TMDB Poster Links
+const rawData = [{"year": 2013, "rank": 1, "title": "Frozen", "boxOffice": 1280.8, "genre": "Animation", "director": "Chris Buck, Jennifer Lee", "poster": "https://image.tmdb.org/t/p/w500/kgwjIbS69p968L7VvK5MoY7960G.jpg"}, {"year": 2013, "rank": 2, "title": "Iron Man 3", "boxOffice": 1214.8, "genre": "Action", "director": "Shane Black", "poster": "https://image.tmdb.org/t/p/w500/qhPtRUW9H7TMz0r6T6IKTV99D5p.jpg"}, {"year": 2013, "rank": 3, "title": "Despicable Me 2", "boxOffice": 970.8, "genre": "Animation", "director": "Pierre Coffin, Chris Renaud", "poster": "https://image.tmdb.org/t/p/w500/5S09h7YmB9pSAti6Y8062V18KkK.jpg"}, {"year": 2013, "rank": 4, "title": "The Hobbit: The Desolation of Smaug", "boxOffice": 958.4, "genre": "Fantasy", "director": "Peter Jackson", "poster": "https://image.tmdb.org/t/p/w500/vE9C8HIn8yGTM8H9WpE88X9Bv3k.jpg"}, {"year": 2013, "rank": 5, "title": "The Hunger Games: Catching Fire", "boxOffice": 865.0, "genre": "Science Fiction", "director": "Francis Lawrence", "poster": "https://image.tmdb.org/t/p/w500/v067N9pC5p7fR6H3R8Xk9v9m6P3.jpg"}, {"year": 2014, "rank": 1, "title": "Transformers: Age of Extinction", "boxOffice": 1104.1, "genre": "Action", "director": "Michael Bay", "poster": "https://image.tmdb.org/t/p/w500/77S99Xp88P4nS6394P6n4N69p63.jpg"}, {"year": 2014, "rank": 2, "title": "The Hobbit: The Battle of the Five Armies", "boxOffice": 962.2, "genre": "Fantasy", "director": "Peter Jackson", "poster": "https://image.tmdb.org/t/p/w500/x7S6XmInZ669rS97v9C867vYovR.jpg"}, {"year": 2014, "rank": 3, "title": "Guardians of the Galaxy", "boxOffice": 773.4, "genre": "Action", "director": "James Gunn", "poster": "https://image.tmdb.org/t/p/w500/r7DuyYJszVI0XYBRuL7QpXjG1N5.jpg"}, {"year": 2014, "rank": 4, "title": "Maleficent", "boxOffice": 758.5, "genre": "Fantasy", "director": "Robert Stromberg", "poster": "https://image.tmdb.org/t/p/w500/ik89Go3S6M3p9T6f0sz2Yf08GBy.jpg"}, {"year": 2014, "rank": 5, "title": "The Hunger Games: Mockingjay – Part 1", "boxOffice": 755.4, "genre": "Science Fiction", "director": "Francis Lawrence", "poster": "https://image.tmdb.org/t/p/w500/gj2H2icB6YFp88o36vPbZ6E94rb.jpg"}, {"year": 2015, "rank": 1, "title": "Star Wars: The Force Awakens", "boxOffice": 2068.2, "genre": "Science Fiction", "director": "J. J. Abrams", "poster": "https://image.tmdb.org/t/p/w500/wqn6ibpSFFXxFWLgH0aR3J9tdnk.jpg"}, {"year": 2015, "rank": 2, "title": "Jurassic World", "boxOffice": 1671.5, "genre": "Science Fiction", "director": "Colin Trevorrow", "poster": "https://image.tmdb.org/t/p/w500/r7DuyYJszVI0XYBRuL7QpXjG1N5.jpg"}, {"year": 2015, "rank": 3, "title": "Furious 7", "boxOffice": 1515.3, "genre": "Action", "director": "James Wan", "poster": "https://image.tmdb.org/t/p/w500/d977NoPLpZp7p9u5u63.jpg"}, {"year": 2015, "rank": 4, "title": "Avengers: Age of Ultron", "boxOffice": 1402.8, "genre": "Action", "director": "Joss Whedon", "poster": "https://image.tmdb.org/t/p/w500/t90Y3GZIGuM9vUu8S99616Xk6S.jpg"}, {"year": 2015, "rank": 5, "title": "Minions", "boxOffice": 1159.4, "genre": "Animation", "director": "Pierre Coffin, Kyle Balda", "poster": "https://image.tmdb.org/t/p/w500/q0Rmk7mS74g9R909R96464646.jpg"}, {"year": 2016, "rank": 1, "title": "Captain America: Civil War", "boxOffice": 1153.3, "genre": "Action", "director": "Anthony & Joe Russo", "poster": "https://image.tmdb.org/t/p/w500/k0R0R0R0R0R0R0R0R0R0R0R.jpg"}, {"year": 2016, "rank": 2, "title": "Rogue One: A Star Wars Story", "boxOffice": 1056.1, "genre": "Science Fiction", "director": "Gareth Edwards", "poster": "https://image.tmdb.org/t/p/w500/5jX9pSAti6Y8062V18KkK.jpg"}, {"year": 2016, "rank": 3, "title": "Finding Dory", "boxOffice": 1028.6, "genre": "Animation", "director": "Andrew Stanton", "poster": "https://image.tmdb.org/t/p/w500/369p6363.jpg"}, {"year": 2016, "rank": 4, "title": "Zootopia", "boxOffice": 1025.5, "genre": "Animation", "director": "Byron Howard, Rich Moore", "poster": "https://image.tmdb.org/t/p/w500/hlK0R0R.jpg"}, {"year": 2016, "rank": 5, "title": "The Jungle Book", "boxOffice": 967.7, "genre": "Fantasy", "director": "Jon Favreau", "poster": "https://image.tmdb.org/t/p/w500/j0R0R.jpg"}, {"year": 2017, "rank": 1, "title": "Star Wars: The Last Jedi", "boxOffice": 1334.4, "genre": "Science Fiction", "director": "Rian Johnson", "poster": "https://image.tmdb.org/t/p/w500/kps99.jpg"}, {"year": 2017, "rank": 2, "title": "Beauty and the Beast", "boxOffice": 1266.1, "genre": "Fantasy", "director": "Bill Condon", "poster": "https://image.tmdb.org/t/p/w500/h63.jpg"}, {"year": 2017, "rank": 3, "title": "The Fate of the Furious", "boxOffice": 1236.0, "genre": "Action", "director": "F. Gary Gray", "poster": "https://image.tmdb.org/t/p/w500/f63.jpg"}, {"year": 2017, "rank": 4, "title": "Despicable Me 3", "boxOffice": 1034.8, "genre": "Animation", "director": "Kyle Balda", "poster": "https://image.tmdb.org/t/p/w500/d63.jpg"}, {"year": 2017, "rank": 5, "title": "Jumanji: Welcome to the Jungle", "boxOffice": 962.1, "genre": "Adventure", "director": "Jake Kasdan", "poster": "https://image.tmdb.org/t/p/w500/j63.jpg"}, {"year": 2018, "rank": 1, "title": "Avengers: Infinity War", "boxOffice": 2048.4, "genre": "Action", "director": "Anthony & Joe Russo", "poster": "https://image.tmdb.org/t/p/w500/7WsyChvRStvT0SIp2onGhfw6sIB.jpg"}, {"year": 2018, "rank": 2, "title": "Black Panther", "boxOffice": 1347.6, "genre": "Action", "director": "Ryan Coogler", "poster": "https://image.tmdb.org/t/p/w500/uxzz9.jpg"}, {"year": 2018, "rank": 3, "title": "Jurassic World: Fallen Kingdom", "boxOffice": 1308.5, "genre": "Science Fiction", "director": "J. A. Bayona", "poster": "https://image.tmdb.org/t/p/w500/j63.jpg"}, {"year": 2018, "rank": 4, "title": "Incredibles 2", "boxOffice": 1242.8, "genre": "Animation", "director": "Brad Bird", "poster": "https://image.tmdb.org/t/p/w500/i63.jpg"}, {"year": 2018, "rank": 5, "title": "Aquaman", "boxOffice": 1148.5, "genre": "Action", "director": "James Wan", "poster": "https://image.tmdb.org/t/p/w500/a63.jpg"}, {"year": 2019, "rank": 1, "title": "Avengers: Endgame", "boxOffice": 2797.5, "genre": "Action", "director": "Anthony & Joe Russo", "poster": "https://image.tmdb.org/t/p/w500/or06PztCDmG66sCNywufH6PjXZ3.jpg"}, {"year": 2019, "rank": 2, "title": "The Lion King", "boxOffice": 1656.9, "genre": "Animation", "director": "Jon Favreau", "poster": "https://image.tmdb.org/t/p/w500/dz9.jpg"}, {"year": 2019, "rank": 3, "title": "Frozen II", "boxOffice": 1450.0, "genre": "Animation", "director": "Chris Buck, Jennifer Lee", "poster": "https://image.tmdb.org/t/p/w500/pje.jpg"}, {"year": 2019, "rank": 4, "title": "Spider-Man: Far From Home", "boxOffice": 1131.9, "genre": "Action", "director": "Jon Watts", "poster": "https://image.tmdb.org/t/p/w500/4.jpg"}, {"year": 2019, "rank": 5, "title": "Captain Marvel", "boxOffice": 1128.5, "genre": "Action", "director": "Anna Boden, Ryan Fleck", "poster": "https://image.tmdb.org/t/p/w500/c.jpg"}, {"year": 2020, "rank": 1, "title": "The Eight Hundred", "boxOffice": 461.4, "genre": "War", "director": "Guan Hu", "poster": "https://image.tmdb.org/t/p/w500/h7YvWn7L7CqG9hMv7Q6Wk9hMv7Q.jpg"}, {"year": 2020, "rank": 2, "title": "Bad Boys for Life", "boxOffice": 426.5, "genre": "Action", "director": "Adil El Arbi, Bilall Fallah", "poster": "https://image.tmdb.org/t/p/w500/y95vBYquzArOTj9bRwxbduy7RZs.jpg"}, {"year": 2020, "rank": 3, "title": "My People, My Homeland", "boxOffice": 422.4, "genre": "Comedy", "director": "Collectif", "poster": "https://image.tmdb.org/t/p/w500/eW30Hq0E9r18i4sW5rL5E8e3B7v.jpg"}, {"year": 2020, "rank": 4, "title": "Tenet", "boxOffice": 365.3, "genre": "Science Fiction", "director": "Christopher Nolan", "poster": "https://image.tmdb.org/t/p/w500/a63.jpg"}, {"year": 2020, "rank": 5, "title": "Sonic the Hedgehog", "boxOffice": 319.7, "genre": "Adventure", "director": "Jeff Fowler", "poster": "https://image.tmdb.org/t/p/w500/s63.jpg"}, {"year": 2021, "rank": 1, "title": "Spider-Man: No Way Home", "boxOffice": 1921.8, "genre": "Action", "director": "Jon Watts", "poster": "https://image.tmdb.org/t/p/w500/1g0dhYmWy6k9JSvfyUJp7oRMn3p.jpg"}, {"year": 2021, "rank": 2, "title": "The Battle at Lake Changjin", "boxOffice": 902.5, "genre": "War", "director": "Chen Kaige", "poster": "https://image.tmdb.org/t/p/w500/pAInP8M5TfV0WjK5S70Xp6x6YmX.jpg"}, {"year": 2021, "rank": 3, "title": "Hi, Mom", "boxOffice": 841.7, "genre": "Comedy", "director": "Jia Ling", "poster": "https://image.tmdb.org/t/p/w500/mH9E63mX866rG9X3A67vX9zYm6P.jpg"}, {"year": 2021, "rank": 4, "title": "No Time to Die", "boxOffice": 774.2, "genre": "Action", "director": "Cary Joji Fukunaga", "poster": "https://image.tmdb.org/t/p/w500/n.jpg"}, {"year": 2021, "rank": 5, "title": "F9", "boxOffice": 726.2, "genre": "Action", "director": "Justin Lin", "poster": "https://image.tmdb.org/t/p/w500/f.jpg"}, {"year": 2022, "rank": 1, "title": "Avatar: The Way of Water", "boxOffice": 2320.3, "genre": "Science Fiction", "director": "James Cameron", "poster": "https://image.tmdb.org/t/p/w500/t6Sna48mS8082Yf4ZfO9uN76M11.jpg"}, {"year": 2022, "rank": 2, "title": "Top Gun: Maverick", "boxOffice": 1495.7, "genre": "Action", "director": "Joseph Kosinski", "poster": "https://image.tmdb.org/t/p/w500/t.jpg"}, {"year": 2022, "rank": 3, "title": "Jurassic World Dominion", "boxOffice": 1002.0, "genre": "Science Fiction", "director": "Colin Trevorrow", "poster": "https://image.tmdb.org/t/p/w500/j.jpg"}, {"year": 2022, "rank": 4, "title": "Doctor Strange in the Multiverse of Madness", "boxOffice": 955.8, "genre": "Action", "director": "Sam Raimi", "poster": "https://image.tmdb.org/t/p/w500/d.jpg"}, {"year": 2022, "rank": 5, "title": "Minions: The Rise of Gru", "boxOffice": 940.2, "genre": "Animation", "director": "Kyle Balda", "poster": "https://image.tmdb.org/t/p/w500/m.jpg"}, {"year": 2023, "rank": 1, "title": "Barbie", "boxOffice": 1445.6, "genre": "Comedy", "director": "Greta Gerwig", "poster": "https://image.tmdb.org/t/p/w500/iuFNmBTD0X4EXI0V9vIpxQ69vMG.jpg"}, {"year": 2023, "rank": 2, "title": "The Super Mario Bros. Movie", "boxOffice": 1362.0, "genre": "Animation", "director": "Aaron Horvath, Michael Jelenic", "poster": "https://image.tmdb.org/t/p/w500/qNBAXBIQlnOThrVvA6mA2B5ggV6.jpg"}, {"year": 2023, "rank": 3, "title": "Oppenheimer", "boxOffice": 975.4, "genre": "Drama", "director": "Christopher Nolan", "poster": "https://image.tmdb.org/t/p/w500/8Gxv2mYmUpeZekv0YpS66YnSOTl.jpg"}, {"year": 2023, "rank": 4, "title": "Guardians of the Galaxy Vol. 3", "boxOffice": 845.6, "genre": "Action", "director": "James Gunn", "poster": "https://image.tmdb.org/t/p/w500/g.jpg"}, {"year": 2023, "rank": 5, "title": "Fast X", "boxOffice": 704.9, "genre": "Action", "director": "Louis Leterrier", "poster": "https://image.tmdb.org/t/p/w500/fiVW0qBtLZ7zSnyYm4YvYpPa9v9.jpg"}];
 
-const i18n = {
+const translations = {
     en: {
-        title: "Box Office Explorer",
-        sub: "Global Top 5 Movies (2013—2023)",
-        nav_overview: "Overview",
-        nav_genres: "Genres",
-        nav_directors: "Top Directors",
-        nav_timeline: "Timeline",
-        nav_gallery: "Gallery",
-        director: "Director",
-        revenue: "Revenue",
-        rank: "Rank"
+        title: "Cinema Box Office",
+        sub: "Data analysis of the top 55 blockbusters (2013—2023)",
+        nav_ov: "Overview", nav_gr: "Genre Analysis", nav_dr: "Top Directors", nav_tl: "Timeline", nav_gy: "Movie Gallery",
+        rev: "Revenue", dir: "Director", year: "Year"
     },
     fr: {
-        title: "Explorateur Box-Office",
-        sub: "Top 5 des films mondiaux (2013—2023)",
-        nav_overview: "Vue d'ensemble",
-        nav_genres: "Genres",
-        nav_directors: "Meilleurs Réalisateurs",
-        nav_timeline: "Chronologie",
-        nav_gallery: "Galerie",
-        director: "Réalisateur",
-        revenue: "Recettes",
-        rank: "Rang"
+        title: "Le Box-Office Mondial",
+        sub: "Analyse des 55 plus grands succès (2013—2023)",
+        nav_ov: "Vue d'ensemble", nav_gr: "Par Genre", nav_dr: "Réalisateurs", nav_tl: "Chronologie", nav_gy: "Galerie Photos",
+        rev: "Recettes", dir: "Réalisateur", year: "Année"
     }
 };
 
 let currentLang = 'en';
-
-function toggleLang() {
-    currentLang = currentLang === 'en' ? 'fr' : 'en';
-    document.getElementById('mainTitle').innerText = i18n[currentLang].title;
-    document.getElementById('subTitle').innerText = i18n[currentLang].sub;
-    document.querySelectorAll('[data-key]').forEach(el => {
-        el.innerText = i18n[currentLang][el.getAttribute('data-key')];
-    });
-    // Re-render current viz
-    const active = document.querySelector('.nav-item.active').innerText.toLowerCase();
-    showViz(active.includes('over') ? 'overview' : active.includes('gen') ? 'genres' : active.includes('dir') ? 'directors' : active.includes('time') ? 'timeline' : 'gallery');
-}
-
 const genreColors = {
-    "Action": "var(--color-action)", "Animation": "var(--color-animation)",
-    "Fantasy": "var(--color-fantasy)", "Science Fiction": "var(--color-scifi)",
-    "Comedy": "var(--color-comedy)", "Adventure": "var(--color-adventure)",
-    "Drama": "var(--color-drama)", "War": "var(--color-war)"
+    "Action": "var(--c-action)", "Animation": "var(--c-animation)",
+    "Fantasy": "var(--c-fantasy)", "Science Fiction": "var(--c-scifi)",
+    "Comedy": "var(--c-comedy)", "Adventure": "var(--c-adventure)",
+    "Drama": "var(--c-drama)", "War": "var(--c-war)"
 };
 
-function showViz(type, e) {
-    if(e) {
-        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-        e.target.classList.add('active');
-    }
+function toggleLanguage() {
+    currentLang = currentLang === 'en' ? 'fr' : 'en';
+    const t = translations[currentLang];
+    d3.select("#txt-title").text(t.title);
+    d3.select("#txt-subtitle").text(t.sub);
+    d3.selectAll("[data-key]").each(function() {
+        d3.select(this).text(t[d3.select(this).attr("data-key")]);
+    });
+    const currentType = d3.select(".nav-link.active").attr("onclick").split("'")[1];
+    updateView(currentType);
+}
 
-    const container = d3.select("#viz");
+function updateView(type, event) {
+    if(event) {
+        d3.selectAll(".nav-link").classed("active", false);
+        d3.select(event.target).classed("active", true);
+    }
+    
+    const container = d3.select("#stage");
     container.selectAll("*").remove();
 
     if(type === 'gallery') renderGallery();
@@ -149,116 +166,101 @@ function showViz(type, e) {
     else if(type === 'timeline') renderTimeline();
 }
 
+function renderGallery() {
+    const grid = d3.select("#stage").append("div").attr("class", "movie-grid");
+    grid.selectAll(".movie-card").data(rawData).enter().append("div").attr("class", "movie-card")
+        .html(d => `
+            <div class="poster-container">
+                <div class="rank-badge">${d.rank}</div>
+                <img src="${d.poster}" loading="lazy" onerror="this.src='https://via.placeholder.com/300x450?text=Poster+Missing'">
+            </div>
+            <div class="card-meta">
+                <h4>${d.title}</h4>
+                <p>${d.year} • $${d.boxOffice}M</p>
+            </div>
+        `);
+}
+
 function renderOverview() {
-    const margin = {top: 20, right: 20, bottom: 60, left: 60},
-          width = document.getElementById('viz').offsetWidth - margin.left - margin.right,
+    const margin = {top: 40, right: 30, bottom: 60, left: 60},
+          width = document.getElementById('stage').offsetWidth - margin.left - margin.right,
           height = 500 - margin.top - margin.bottom;
 
-    const svg = d3.select("#viz").append("svg")
+    const svg = d3.select("#stage").append("svg")
         .attr("width", width + margin.left + margin.right)
         .attr("height", height + margin.top + margin.bottom)
-      .append("g")
-        .attr("transform", `translate(${margin.left},${margin.top})`);
+      .append("g").attr("transform", `translate(${margin.left},${margin.top})`);
 
     const x = d3.scaleLinear().domain([2012.5, 2023.5]).range([0, width]);
     const y = d3.scaleLinear().domain([0, 3000]).range([height, 0]);
 
     svg.append("g").attr("transform", `translate(0,${height})`).call(d3.axisBottom(x).tickFormat(d3.format("d")).tickSize(0).tickPadding(15));
-    svg.append("g").call(d3.axisLeft(y).ticks(5).tickFormat(d => `$${d}M`).tickSize(-width)).style("stroke-dasharray", "4,4").style("color", "#eee");
+    svg.append("g").call(d3.axisLeft(y).ticks(5).tickFormat(d => `$${d}M`).tickSize(-width)).style("stroke-dasharray", "4,4").style("color", "#f1f5f9");
 
-    svg.selectAll("circle")
-        .data(data)
-        .enter().append("circle")
-        .attr("cx", d => x(d.year))
-        .attr("cy", d => y(d.boxOffice))
-        .attr("r", 8)
-        .attr("fill", d => genreColors[d.genre])
-        .attr("opacity", 0.7)
-        .on("mouseenter", (e, d) => {
-            d3.select("#tooltip").style("opacity", 1)
-              .html(`<strong>${d.title}</strong><br>$${d.boxOffice}M`)
-              .style("left", (e.pageX + 10) + "px").style("top", (e.pageY - 10) + "px");
+    svg.selectAll("circle").data(rawData).enter().append("circle")
+        .attr("cx", d => x(d.year)).attr("cy", d => y(d.boxOffice)).attr("r", 7)
+        .attr("fill", d => genreColors[d.genre]).attr("opacity", 0.75)
+        .style("cursor", "pointer")
+        .on("mouseover", (e, d) => {
+            d3.select("#tooltip").style("opacity", 1).html(`<strong>${d.title}</strong><br>$${d.boxOffice}M`)
+              .style("left", (e.pageX + 15) + "px").style("top", (e.pageY - 15) + "px");
         })
-        .on("mouseleave", () => d3.select("#tooltip").style("opacity", 0));
-}
-
-function renderGallery() {
-    const g = d3.select("#viz").append("div").attr("class", "gallery");
-    g.selectAll(".movie-card")
-     .data(data)
-     .enter().append("div")
-     .attr("class", "movie-card")
-     .html(d => `
-        <div class="poster-wrap">
-            <img src="${d.poster}" loading="lazy">
-        </div>
-        <div class="movie-info">
-            <div class="m-title">${d.title}</div>
-            <div class="m-meta"><span class="genre-dot" style="background:${genreColors[d.genre]}"></span>${d.year} • ${d.boxOffice}M</div>
-        </div>
-     `);
+        .on("mouseout", () => d3.select("#tooltip").style("opacity", 0));
 }
 
 function renderGenres() {
-    const margin = {top: 20, right: 20, bottom: 40, left: 100};
-    const width = document.getElementById('viz').offsetWidth - margin.left - margin.right;
-    const genreData = d3.rollups(data, v => d3.sum(v, d => d.boxOffice), d => d.genre).sort((a,b) => b[1] - a[1]);
-    
-    const height = genreData.length * 45;
-    const svg = d3.select("#viz").append("svg").attr("width", width + margin.left + margin.right).attr("height", height + margin.top + margin.bottom).append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+    const margin = {top: 20, right: 30, bottom: 40, left: 120};
+    const width = document.getElementById('stage').offsetWidth - margin.left - margin.right;
+    const gData = d3.rollups(rawData, v => d3.sum(v, d => d.boxOffice), d => d.genre).sort((a,b) => b[1] - a[1]);
+    const height = gData.length * 50;
 
-    const x = d3.scaleLinear().domain([0, d3.max(genreData, d => d[1])]).range([0, width]);
-    const y = d3.scaleBand().domain(genreData.map(d => d[0])).range([0, height]).padding(0.3);
+    const svg = d3.select("#stage").append("svg").attr("width", width + margin.left + margin.right).attr("height", height + margin.top + margin.bottom).append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+    const x = d3.scaleLinear().domain([0, d3.max(gData, d => d[1])]).range([0, width]);
+    const y = d3.scaleBand().domain(gData.map(d => d[0])).range([0, height]).padding(0.3);
 
-    svg.selectAll("rect").data(genreData).enter().append("rect")
-       .attr("y", d => y(d[0])).attr("height", y.bandwidth())
-       .attr("fill", d => genreColors[d[0]])
-       .attr("width", 0).transition().duration(800).attr("width", d => x(d[1]));
+    svg.selectAll("rect").data(gData).enter().append("rect")
+       .attr("y", d => y(d[0])).attr("height", y.bandwidth()).attr("fill", d => genreColors[d[0]])
+       .attr("width", 0).transition().duration(1000).attr("width", d => x(d[1]));
 
     svg.append("g").call(d3.axisLeft(y).tickSize(0).tickPadding(10));
 }
 
 function renderDirectors() {
-    const margin = {top: 20, right: 30, bottom: 40, left: 150};
-    const width = document.getElementById('viz').offsetWidth - margin.left - margin.right;
-    const dirData = d3.rollups(data, v => d3.sum(v, d => d.boxOffice), d => d.director)
-                      .sort((a,b) => b[1] - a[1]).slice(0, 10);
-    
+    const margin = {top: 20, right: 30, bottom: 40, left: 160};
+    const width = document.getElementById('stage').offsetWidth - margin.left - margin.right;
+    const dData = d3.rollups(rawData, v => d3.sum(v, d => d.boxOffice), d => d.director).sort((a,b) => b[1] - a[1]).slice(0, 10);
     const height = 450;
-    const svg = d3.select("#viz").append("svg").attr("width", width + margin.left + margin.right).attr("height", height + margin.top + margin.bottom).append("g").attr("transform", `translate(${margin.left},${margin.top})`);
 
-    const x = d3.scaleLinear().domain([0, d3.max(dirData, d => d[1])]).range([0, width]);
-    const y = d3.scaleBand().domain(dirData.map(d => d[0])).range([0, height]).padding(0.4);
+    const svg = d3.select("#stage").append("svg").attr("width", width + margin.left + margin.right).attr("height", height + margin.top + margin.bottom).append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+    const x = d3.scaleLinear().domain([0, d3.max(dData, d => d[1])]).range([0, width]);
+    const y = d3.scaleBand().domain(dData.map(d => d[0])).range([0, height]).padding(0.4);
 
-    svg.selectAll("rect").data(dirData).enter().append("rect")
-       .attr("y", d => y(d[0])).attr("height", y.bandwidth())
-       .attr("fill", "var(--accent)")
-       .attr("width", 0).transition().duration(800).attr("width", d => x(d[1]));
+    svg.selectAll("rect").data(dData).enter().append("rect")
+       .attr("y", d => y(d[0])).attr("height", y.bandwidth()).attr("fill", "var(--accent)").attr("rx", 4)
+       .attr("width", 0).transition().duration(1000).attr("width", d => x(d[1]));
 
-    svg.append("g").call(d3.axisLeft(y).tickSize(0).tickPadding(10));
+    svg.append("g").call(d3.axisLeft(y).tickSize(0).tickPadding(12));
 }
 
 function renderTimeline() {
-    const margin = {top: 20, right: 40, bottom: 40, left: 60};
-    const width = document.getElementById('viz').offsetWidth - margin.left - margin.right;
+    const margin = {top: 40, right: 40, bottom: 50, left: 60};
+    const width = document.getElementById('stage').offsetWidth - margin.left - margin.right;
     const height = 400;
-    
-    const yearly = d3.rollups(data, v => d3.sum(v, d => d.boxOffice), d => d.year).sort((a,b) => a[0]-b[0]);
-    const svg = d3.select("#viz").append("svg").attr("width", width + margin.left + margin.right).attr("height", height + margin.top + margin.bottom).append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+    const tData = d3.rollups(rawData, v => d3.sum(v, d => d.boxOffice), d => d.year).sort((a,b) => a[0]-b[0]);
 
+    const svg = d3.select("#stage").append("svg").attr("width", width + margin.left + margin.right).attr("height", height + margin.top + margin.bottom).append("g").attr("transform", `translate(${margin.left},${margin.top})`);
     const x = d3.scaleLinear().domain([2013, 2023]).range([0, width]);
-    const y = d3.scaleLinear().domain([0, d3.max(yearly, d => d[1])]).range([height, 0]);
+    const y = d3.scaleLinear().domain([0, d3.max(tData, d => d[1])]).range([height, 0]);
 
-    const area = d3.area().x(d => x(d[0])).y0(height).y1(d => y(d[1])).curve(d3.curveBasis);
-    
-    svg.append("path").datum(yearly).attr("fill", "#dbeafe").attr("d", area);
-    svg.append("path").datum(yearly).attr("fill", "none").attr("stroke", "var(--accent)").attr("stroke-width", 3).attr("d", d3.line().x(d => x(d[0])).y(d => y(d[1])).curve(d3.curveBasis));
+    const area = d3.area().x(d => x(d[0])).y0(height).y1(d => y(d[1])).curve(d3.curveMonotoneX);
+    svg.append("path").datum(tData).attr("fill", "#e0f2fe").attr("d", area);
+    svg.append("path").datum(tData).attr("fill", "none").attr("stroke", "var(--accent)").attr("stroke-width", 4).attr("d", d3.line().x(d => x(d[0])).y(d => y(d[1])).curve(d3.curveMonotoneX));
 
-    svg.append("g").attr("transform", `translate(0,${height})`).call(d3.axisBottom(x).tickFormat(d3.format("d")));
+    svg.append("g").attr("transform", `translate(0,${height})`).call(d3.axisBottom(x).tickFormat(d3.format("d")).tickSize(0).tickPadding(15));
 }
 
-// Initial Load
-showViz('overview');
+// Kickoff
+updateView('overview');
 </script>
 </body>
 </html>
